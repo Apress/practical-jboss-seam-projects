@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+                             http://java.sun.com/xml/ns/j2ee/web-app_2_5.xsd"
+         version="2.5">
+    <display-name>Practical Seam: Rich Client</display-name>
+    
+    <!-- We need the Seam listener to manage contexts -->
+    <listener>
+        <listener-class>org.jboss.seam.servlet.SeamListener</listener-class>
+    </listener>
+    
+    <!-- We're using MyFaces JSF, so we need its listener -->
+    <listener>
+        <listener-class>org.apache.myfaces.webapp.StartupServletContextListener</listener-class>
+    </listener>
+    
+    <!-- Turn on the Seam debug page for this app -->
+    <!--    
+    <context-param>
+        <param-name>org.jboss.seam.core.init.debug</param-name>
+        <param-value>true</param-value>
+    </context-param>
+    -->
+    
+    <!-- Seam requires that you configure JSF to use client-side state saving -->
+    <context-param>
+        <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
+        <param-value>client</param-value>
+    </context-param>
+    
+    <context-param>
+        <param-name>javax.faces.DEFAULT_SUFFIX</param-name>
+        <param-value>.jsp</param-value>
+    </context-param>
+    
+    <!-- The following filter is needed if you're doing certain redirects
+         from within JSF.  It ensures that Seam's contexts remain associated
+         with the client. -->
+    <filter>
+        <filter-name>Seam Redirect Filter</filter-name>
+        <filter-class>org.jboss.seam.servlet.SeamRedirectFilter</filter-class>
+    </filter>    
+    <filter-mapping>
+        <filter-name>Seam Redirect Filter</filter-name>
+        <url-pattern>*.seam</url-pattern>
+    </filter-mapping>
+    
+    <!-- This Seam filter cleans up any uncommitted transactions, which can
+         crop up when unhandled exceptions occur -->
+    <filter>
+        <filter-name>Seam Exception Filter</filter-name>
+        <filter-class>org.jboss.seam.servlet.SeamExceptionFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Seam Exception Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    
+    <!-- Make sure the JSF servlet is configured -->
+    <servlet>
+        <servlet-name>Faces Servlet</servlet-name>
+        <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>Faces Servlet</servlet-name>
+        <url-pattern>*.seam</url-pattern>
+    </servlet-mapping>      
+    
+    <!-- Configure the resource servlet, used for component remoting, etc. -->
+    <servlet>
+        <servlet-name>Seam Resource Servlet</servlet-name>
+        <servlet-class>org.jboss.seam.servlet.ResourceServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Seam Resource Servlet</servlet-name>
+        <url-pattern>/seam/resource/*</url-pattern>
+    </servlet-mapping>    
+    
+</web-app>
+    

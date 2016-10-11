@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components>
+    <component name="org.jboss.seam.core.init">
+        <!-- JNDI name pattern for JBoss EJB 3.0 -->
+        <property name="jndiPattern">PracticalSeam-Intro-Seam/#{ejbName}/local</property>
+        <property name="myFacesLifecycleBug">true</property>        
+    </component>
+    
+    <component class="org.jboss.seam.core.Ejb" 
+               installed="false"/>        
+</components>

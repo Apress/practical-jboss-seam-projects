@@ -1,0 +1,47 @@
+<!-- jPDL for the gadget review business process. -->
+<process-definition name="review-gadget">
+    <start-state>
+        <transition to="review-fork" />
+    </start-state>
+    
+    <fork name="review-fork">
+        <transition name="core-review" to="review-core" />
+        <transition name="types-review" to="review-types" />
+        <transition name="features-review" to="review-features" />
+    </fork>
+    
+    <task-node name="review-core">
+        <task name="review-core" description="Review the core data for #{reviewGadget.name}">
+            <assignment pooled-actors="ADMIN"/>
+        </task>
+        <transition to="review-join" />
+    </task-node>
+    
+    <task-node name="review-types">
+        <task name="review-types" description="Review the types assigned to #{reviewGadget.name}">
+            <assignment pooled-actors="ADMIN"/>
+        </task>
+        <transition to="review-join" />
+    </task-node>
+    
+    <task-node name="review-features">
+        <task name="review-features" description="Review the features assigned to #{reviewGadget.name}">
+            <assignment pooled-actors="ADMIN"/>
+        </task>
+        <transition to="review-join" />
+    </task-node>
+    
+    <join name="review-join">
+        <transition to="verify-revisions" />
+    </join>
+    
+    <task-node name="verify-revisions">
+        <task name="verify-revisions" description="Verify reviewed data for #{reviewGadget.name}">
+            <assignment actor-id="#{reviewGadget.submitter.idStr}"/>
+        </task>
+        <transition name="reject" to="review-core"/>
+        <transition name="confirm" to="end" />
+    </task-node>
+    
+    <end-state name="end" />
+</process-definition>

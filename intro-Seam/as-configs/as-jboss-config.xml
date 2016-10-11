@@ -1,0 +1,428 @@
+<!-- Configuration file for JBoss application servers -->
+
+<!-- Set any server/environment-specific properties here -->
+<project name="jboss">
+    <!-- Base directory of the local JBoss installation -->
+    <property name="jboss.home" value="/usr/local/jboss-4.0.2"/>
+    <!-- Name of the server instance to be used for deployment, libraries,etc. -->
+    <property name="jboss.server.name" value="default"/>
+    
+    <!-- 
+     Standard properties and assets.  These should be set to match the configuration
+     of the application server, so that they can be used within the build
+     script if needed. 
+    -->
+    
+    <!-- Property: as.http.port
+               Port number used by web/app server for regular HTTP traffic. -->
+    <property name="as.http.port" value="8080"/>
+    
+    <!-- Property: as.http.hostname
+               Name/IP address of host of app server -->
+    <property name="as.http.hostname" value="localhost"/>
+    
+    <!-- Delay, in seconds, to expect for applications to deploy
+        on this application server. -->
+    <!-- On JBoss, we deploy by simply dropping the archive in the deploy
+        directory, and the app server picks it up and deploys it.  This
+        could take a few seconds after the as-deploy target finishes,
+        so we set this to 15 seconds by default. -->
+    <property name="as.deploy.delay" value="15"/>
+    
+    <!-- **********************************************************************
+         The remainder of the config file should NOT need to be changed, assuming
+         you are using a standard JBoss setup. 
+         ********************************************************************** -->
+         
+    <!-- Path: as.j2ee.core.classpath
+           Defines set of libraries containing the core J2EE APIs provided
+           by this app server. -->
+    <!-- For JBoss, we include the core J2EE library jars from the default server
+         instance in the JBoss server directory.  Note that these paths changed 
+         between 3.2.3 and 3.2.5, and then again in the 4.0.x releases. -->
+    <!-- Use this path setting for JBoss 3.2.3 and earlier 3.2 versions -->
+    <!--
+    <path id="as.j2ee.core.classpath">
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/jboss-j2ee.jar"/>
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/javax.servlet.jar"/>
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/mail.jar"/>
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/activation.jar"/>
+    </path>
+    -->
+    <!-- Use this for JBoss 3.2.5 and later 3.2 versions -->
+    <!--
+    <path id="as.j2ee.core.classpath">
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/jboss-j2ee.jar"/>
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/deploy/jbossweb-tomcat50.sar/servlet-api.jar"/>
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/deploy/jbossweb-tomcat50.sar/jsp-api.jar"/>
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/javax.servlet.jar"/>
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/mail.jar"/>
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/activation.jar"/>
+    </path>
+    -->
+    <!-- Use this for JBoss 4.0.x versions -->
+    <path id="as.j2ee.core.classpath">
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/jboss-j2ee.jar"/>
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/javax.servlet.jar"/>
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/javax.servlet.jsp.jar"/>
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/mail.jar"/>
+        <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/activation.jar"/>
+    </path>
+    
+    <!-- 
+     Targets defined for the application server and invoked in the build script.
+     Each target may require properties or other assets to be set by the build script
+     before invoking them, as noted in the comments before each target.
+    -->
+    
+    <!-- Target: as-create-war
+       Creates a web component archive.  If necessary, this target can post-process
+       the war file if the application server requires it.  The build script is expected
+       to initialize the following properties before calling this target:
+       
+       Required:
+          as.war.name:               A name to be used as the base of the war filename,
+                                     and in reporting progress while executing the target.
+          as.war.dir:                The directory in which to create the war file.
+          as.war.webxml.file:        The path to the file to be used as the web.xml deployment
+                                     descriptor for this war file.
+                            
+       Optional:
+          as.war.files.patternset:   The name of a patternset that specifies all files
+                                     to be included in the base directory of the archive.
+          as.war.files.basedir:      The base directory to be used with the war.patternset.
+          as.war.lib.patternset:     The name of a patternset that specifies all of the 
+                                     jars to be included in the war's WEB-INF/lib directory.
+          as.war.lib.basedir:        The base directory to be used with the war.lib.patternset.
+          as.war.classes.patternset: The name of a patternset that specifies all of the
+                                     files to be included in the war's WEB-INF/classes
+                                     directory.  This patternset can include Java classes,
+                                     Java properties files, etc. as needed by the web 
+                                     components.
+          as.war.classes.basedir:    The base directory to be used with the 
+                                     war.classes.patternset.
+          as.war.webinf.patternset:  The name of a patternset that specifies all of the files
+                                     to be included directly in the WEB-INF directory of
+                                     the war.
+          as.war.webinf.basedir:     The base directory to be used with the 
+                                     war.webinf.patternset.
+          as.war.metainf.patternset: The name of a patternset that specifies all files to be
+                                     included in the META-INF directory of the archive.
+          as.war.metainf.basedir:    The base directory to be used with the 
+                                     war.metainf.patternset. 
+                                  
+     Example:
+          The simplest usage of this target is:
+          
+          <!- - Define the patternsets to be used in the creation of web archives - ->
+          <patternset id="core-ui.files">
+              <exclude name="utils/**"/>
+          </patternset>
+          <patternset id="utils-ui.files">
+              <include name="utils/**"/>
+          </pattternset>
+          <target name="build-app-wars">
+              <!- - Create the war for the core UI, store in core-ui.war - ->
+              <antcall target="as-create-war">
+                  <param name="as.war.name" value="core-ui"/>
+                  <param name="as.war.dir" value="${basedir}"/>
+                  <param name="as.war.webxml.file" value="config/core-web.xml"/>
+                  <param name="as.war.basedir" value="web"/>
+                  <param name="as.war.patternset" value="core-ui.files"/>
+              </antcall>
+              <!- - Create the war for the utils, store in utils-ui.war - ->
+              <antcall target="as-create-war">
+                  <param name="as.war.name" value="utils-ui"/>
+                  <param name="as.war.dir" value="${basedir}"/>
+                  <param name="as.war.webxml.file" value="config/utils-web.xml"/>
+                  <param name="as.war.basedir" value="web"/>
+                  <param name="as.war.patternset" value="utils-ui.files"/>
+              </antcall>
+          </target> -->
+    <target name="as-create-war">
+        <!-- Fail if any required properties aren't set -->
+        <fail unless="as.war.name" 
+              message="Required property 'as.war.name' not set"/>
+        <fail unless="as.war.webxml.file" 
+              message="Required property 'as.war.webxml.file' not set"/>
+              
+        <!-- The JBoss deployment descriptor is assumed to be a file named
+             "jboss-web.xml" in the same directory as the specified web 
+             deployment descriptor -->
+        <dirname property="jboss.dd.dir" file="${as.war.webxml.file}"/>
+        <property name="jboss.dd.file" value="jboss-web.xml"/>
+        
+        <!-- Set any optional, unset properties to defaults -->
+        <patternset id="nullset">
+            <exclude name="**"/>
+        </patternset>
+        <condition property="as.war.files.patternset" value="nullset">
+            <not>
+                <isset property="as.war.files.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.files.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.files.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.lib.patternset" value="nullset">
+            <not>
+                <isset property="as.war.lib.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.lib.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.lib.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.classes.patternset" value="nullset">
+            <not>
+                <isset property="as.war.classes.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.classes.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.classes.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.webinf.patternset" value="nullset">
+            <not>
+                <isset property="as.war.webinf.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.webinf.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.webinf.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.metainf.patternset" value="nullset">
+            <not>
+                <isset property="as.war.metainf.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.metainf.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.metainf.basedir"/>
+            </not>
+        </condition>
+        
+        <!-- Invoke the war task to generate the war file -->
+        <war warfile="${as.war.dir}/${as.war.name}.war" 
+             webxml="${as.war.webxml.file}">
+            <!-- Include any files specified by the as.war.patternset into the root
+             or the web archive. -->
+            <fileset dir="${as.war.files.basedir}">
+                <patternset refid="${as.war.files.patternset}"/>
+            </fileset>
+            
+            <!-- Include any files specified by the as.war.lib.patternset into the 
+             WEB-INF/lib directory of the archive. -->
+            <lib dir="${as.war.lib.basedir}">
+                <patternset refid="${as.war.lib.patternset}"/>
+            </lib>
+            
+            <!-- Include any files specified by the as.war.classes.patternset into
+             the WEB-INF/classes directory of the archive. -->
+            <classes dir="${as.war.classes.basedir}">
+                <patternset refid="${as.war.lib.patternset}"/>
+            </classes>
+            
+            <!-- Include any files specified by the as.war.webinf.patternset into
+             the WEB-INF directory of the archive. -->
+            <webinf dir="${as.war.webinf.basedir}">
+                <patternset refid="${as.war.webinf.patternset}"/>
+            </webinf>
+            <!-- Also include the JBoss deployment descriptor -->
+            <webinf dir="${jboss.dd.dir}">
+                <patternset includes="${jboss.dd.file}"/>
+            </webinf>
+            
+            <!-- Include any files specified by the as.war.metainf.patternset into
+             the META-INF directory of the archive. -->
+            <metainf dir="${as.war.metainf.basedir}">
+                <patternset refid="${as.war.metainf.patternset}"/>
+            </metainf>
+        </war>
+    </target>
+    
+    <!-- Target: as-create-ejb-jar
+       Creates an EJB archive deployable to the target application server.  -->
+    <target name="as-create-ejb-jar" >
+        <echo message="Generating EJB archive '${as.ejb.name}'"/>
+        <!-- Set any optional, unset fileset properties to defaults -->
+        <patternset id="nullset">
+            <exclude name="**"/>
+        </patternset>
+        
+        <!-- Check for the optional support file properties -->
+        <condition property="as.ejb.support.patternset" value="nullset">
+            <not>
+                <isset property="as.ejb.support.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.ejb.support.basedir" value="${basedir}">
+            <not>
+                <isset property="as.ejb.support.basedir"/>
+            </not>
+        </condition>
+        
+        <!-- Invoke the ejbjar task, looking for deployment descriptors
+         in the ${ejb.desc.dir} directory.  We are using "directory"-based
+         naming here, where the name of the directory containing the EJB 
+         deployment descriptor is used as the basis for the ejb-jar filename. -->
+        <ejbjar descriptordir="${as.ejb.desc.dir}"
+                srcdir="${as.ejb.classes.dir}"
+                destdir="${as.ejb.jar.dir}"
+                naming="directory"
+                genericjarsuffix="-generic.jar"
+                flatdestdir="true"
+                dependency="full"
+                cmpversion="2.0">
+            
+            <!-- Specify the JBoss variant of ejbjar, to ensure that the JBoss
+                 deployment descriptors (jboss.xml and jbosscmp-jdbc.xml)
+                 are picked up if present -->
+            <jboss destdir="${as.ejb.jar.dir}"/>
+            
+            <!-- Use local copies of descriptor DTDs provided by JBoss, in case we're
+                 not online -->
+            <dtd
+                publicid="-//Sun Microsystems, Inc.//DTD Enterprise JavaBeans 2.0//EN"
+                location="${jboss.home}/docs/dtd/ejb-jar_2_0.dtd"/>
+            <!-- Only look for EJB descriptors in files ending with "ejb-jar.xml" -->
+            <include name="**/*ejb-jar.xml"/>
+            
+            <!-- Include any specified support files in the module. -->
+            <support dir="${as.ejb.support.basedir}">
+                <patternset refid="${as.ejb.support.patternset}"/>
+            </support>
+        </ejbjar>
+    </target>
+    
+    <!-- Target: as-create-ejb3-jar
+        Creates an EJB3 archive deployable to the target application server.  -->
+    <target name="as-create-ejb3-jar" >
+        <echo message="Generating EJB3 archive '${as.ejb.name}'"/>
+        
+        <!-- Set any optional, unset fileset properties to defaults -->
+        <patternset id="nullset">
+            <exclude name=""/>
+        </patternset>
+        <!-- Check for the optional META-INF file properties -->
+        <condition property="as.ejb.metainf.patternset" value="nullset">
+            <not>
+                <isset property="as.ejb.metainf.patternset"/>
+            </not>
+        </condition>
+        
+        <!-- Invoke the jar task, using the filesets/zipfilesets references
+             provided in the antcall to populate the required areas of the
+             ejb-jar. -->
+        <jar destfile="${as.ejb.jar.dir}/${as.ejb.name}.jar">
+            <!-- Put the classes into the root of the ejb-jar -->
+            <fileset dir="${as.ejb.classes.dir}">
+                <include name="**"/>
+            </fileset>
+            <!-- Pull the metadata information into the META-INF dir.
+                 this dir is expected to contain the ejb-jar.xml file and
+                 the persistence.xml files, if needed. -->
+            <zipfileset prefix="META-INF"
+                        dir="${as.ejb.metainf.basedir}">
+                <include name="persistence.xml"/>
+                <include name="ejb-jar.xml"/>
+                <include name="orm.xml"/>
+                <patternset refid="${as.ejb.metainf.patternset}"/>
+            </zipfileset>
+        </jar>
+    </target>
+    
+    <!-- Target: as-create-ear
+         Creates an application archive, performing any pre- or post-processing required,
+         and including any server-specific configuration files required. -->
+    <target name="as-create-ear">
+        <echo message="Creating application ${as.ear.name}"/>
+        
+        <!-- Assume that the JBoss application deployment file (jboss-app.xml) is located
+         in the same directory as the J2EE standard app deployment descriptor -->
+        <dirname property="jboss.dd.dir" file="${as.ear.appxml.file}"/>
+        <property name="jboss.dd.file" value="jboss-app.xml"/>
+        
+        <!-- Build the ear, including the specified J2EE deployment descriptor, the
+         archive files specified, and the JBoss deployment descriptor, if present -->
+        <ear destfile="${as.ear.dir}/${as.ear.name}.ear" appxml="${as.ear.appxml.file}">
+            <fileset dir="${as.ear.module.dir}">
+                <patternset refid="${as.ear.module.patternset}"/>
+            </fileset>
+            <metainf dir="${jboss.dd.dir}">
+                <patternset includes="${jboss.dd.file}"/>
+            </metainf>
+        </ear>
+    </target>
+    
+    <!-- Target: as-verify-module
+         Verifies a component or application module, ensuring that it follows the 
+         J2EE specs and (optionally) the requirements of the application server in use. -->
+    <target name="as-verify-module">
+        <echo message="Verifying module ${as.module.file}"/>
+        <!-- Use the JBoss verifier to verify the specified module -->
+        <!-- FIX THIS: Needs to check for .ear or .war files, and if passed in, 
+             either reject them or expand the ear and verify the modules
+             within. The JBoss verifier only works on EJB modules. -->
+        <java classname="org.jboss.verifier.Main"
+              fork="true">
+            <classpath>
+                <path refid="as.j2ee.core.classpath"/>
+                <pathelement location="${jboss.home}/server/${jboss.server.name}/conf"/>
+                <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/jboss.jar"/>
+                <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/jpl-pattern.jar"/>
+                <pathelement location="${jboss.home}/server/${jboss.server.name}/lib/jpl-util.jar"/>
+                <pathelement location="${jboss.home}/lib/jboss-system.jar"/>
+                <pathelement location="${jboss.home}/lib/jboss-common.jar"/>
+                <pathelement location="${jboss.home}/lib/jboss-jmx.jar"/>
+                <pathelement location="${jboss.home}/lib/concurrent.jar"/>
+            </classpath>
+            <arg value="${as.module.file}"/>
+        </java>
+    </target>
+    
+    <target name="as-server-start"
+            description="Start the JBoss server">
+        <echo message="JBoss start target is disabled, start the server manually"/>
+        <echo message="Sleeping ${jboss.deploy.delay} seconds to allow any pending deployments to complete."/>
+        <sleep seconds="${jboss.deploy.delay}"/>
+    </target>
+
+    <target name="as-server-stop"
+            description="Stop the JBoss server">
+        <echo message="JBoss stop target is disabled, stop the server manually"/>
+    </target>    
+    
+    <!-- Target: as-deploy
+           Deploys the app war/ear specified by the as.deploy.file parameter,
+           using the deployment name given by the as.deploy.name parameter. 
+           Some application servers do not make use of the deployment name
+           concept, and can ignore this parameter.  Those that do should 
+           map the deployment name to the appropriate deployment option. -->
+    <target name="as-deploy">
+        <echo message="Deploying ${as.deploy.file} to JBoss server ${jboss.server.name}..."/>
+        <!-- For JBoss, we just need to copy the specified archive file
+             to the server's deploy directory -->
+        <copy file="${as.deploy.file}" 
+              todir="${jboss.home}/server/${jboss.server.name}/deploy"/>
+        <!-- Pause for the as.deploy.delay interval, to allow deployment to 
+             complete before any tasks following this are run.  Some of the
+             followup tasks might depend on the deployment being complete -->
+        <echo message="Pausing ${as.deploy.delay} seconds to allow deploy to complete..."/>
+        <sleep seconds="${as.deploy.delay}"/>                   
+        <echo message="Done."/>
+    </target>
+    
+    <!-- Target: as-clean
+          Instructs the application server module to clean up any internal
+          artifacts created by its targets. -->
+    <target name="as-clean">
+        <!-- JBoss module doesn't create any internal artifacts that need
+             to be cleaned up, so nothing to do here. -->
+    </target>
+</project>

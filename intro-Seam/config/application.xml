@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application
+	xmlns="http://java.sun.com/xml/ns/j2ee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+						http://java.sun.com/xml/ns/j2ee/application_1_4.xsd"
+	version="1.4">
+	<display-name>Practical Seam Introduction: Seam</display-name>
+
+	<module>
+		<web>
+			<web-uri>PracticalSeam-Intro-Seam.war</web-uri>
+			<context-root>/PracticalSeam-Intro-Seam</context-root>
+		</web>
+	</module>
+	<module>
+		<ejb>PracticalSeam-Intro-Seam.jar</ejb>
+	</module>
+	<module>
+	    <java>jboss-seam.jar</java>
+	</module>
+	<!--
+	<module>
+	    <java>jbpm-3.1.1.jar</java>
+	</module>
+	-->
+</application>

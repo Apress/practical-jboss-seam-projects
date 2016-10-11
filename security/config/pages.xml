@@ -1,0 +1,36 @@
+<!DOCTYPE pages PUBLIC
+        "-//JBoss/Seam Pages Configuration DTD 1.1//EN"
+        "http://jboss.com/products/seam/pages-1.2.dtd">
+
+<pages>
+    <page view-id="/admin/editGadget.xhtml">Editing gadget: #{gadget.name}</page>
+    <page view-id="/listGadgets.xhtml">All gadgets matching "#{gadgetAdmin.searchField}"</page>
+    <!-- Only admins get to the admin area -->
+    <!--
+    <page view-id="/admin/*">
+        <restrict>#{identity.loggedIn and (s:hasRole('ADMIN') or gadgetAdmin.gadgetSubmitter)}</restrict>
+    </page>
+    -->
+    <page view-id="/admin/*">
+        <restrict>#{identity.loggedIn and s:hasPermission('gadget', 'edit', gadget)}</restrict>
+    </page>
+    <!--
+    <page view-id="/admin/*">
+        <restrict>#{s:hasRole('ADMIN')}</restrict>
+    </page>
+    -->
+    <!-- Must be logged in when entering new gadgets, so the submitter
+         id can be recorded. -->
+    <page view-id="/wizard/*" login-required="true"/>
+    <exception class="org.jboss.seam.security.NotLoggedInException">
+        <redirect view-id="/login.xhtml">
+            <message>You must be logged in to access this page</message>
+        </redirect>
+    </exception>
+    <exception class="org.jboss.seam.security.AuthorizationException">
+        <end-conversation/>
+        <redirect view-id="/index.xhtml">
+            <message>We're terribly sorry, but you don't have the privileges to access the area you requested.</message>
+        </redirect>
+    </exception>
+</pages>

@@ -1,0 +1,384 @@
+<!-- Configuration file for Jakarta Tomcat 5.0 application servers -->
+
+<!-- Set any server/environment-specific properties here -->
+<project name="tomcat5">
+    <!-- Base directory of the local Tomcat installation -->
+    <property name="catalina.home" value="/usr/local/jakarta-tomcat-5.0.28"/>
+    
+    <!-- Delay, in seconds, to expect for applications to deploy. -->
+    <property name="tomcat.deploy.delay" value="15"/>
+    
+    <!-- 
+     Standard properties and assets.  These should be set to match the configuration
+     of the application server, so that they can be used within the build
+     script if needed. 
+    -->
+    
+    <!-- Property: as.http.port
+               Port number used by web/app server for regular HTTP traffic. -->
+    <property name="as.http.port" value="8080"/>
+    
+    <!-- Property: as.http.hostname
+               Name/IP address of host of app server -->
+    <property name="as.http.hostname" value="localhost"/>
+    
+    <!-- Delay, in seconds, to expect for applications to deploy
+        on this application server. -->
+    <!-- With Tomcat, we simply drop the archive in the webapps area,
+         and then the server will pick it up and attempt to deploy it. 
+         This may take a few seconds after the as-deploy target finishes,
+         so we set the delay to 15 seconds by default. -->
+    <property name="as.deploy.delay" value="15"/>
+    
+    <!-- **********************************************************************
+         The remainder of the config file should NOT need to be changed, assuming
+         you are using a standard Tomcat setup. 
+         ********************************************************************** -->
+         
+    <!-- Path: as.j2ee.core.classpath
+           Defines set of libraries containing the core J2EE APIs provided
+           by this app server, to be used for building J2EE code (web
+           components, EJB components, etc.). -->
+    <!-- For Tomcat, we include all the jars in server/lib dir, the common 
+         area, and everything in shared/classes. -->
+    <path id="as.j2ee.core.classpath">
+        <fileset dir="${catalina.home}/server/lib">
+            <include name="*.jar"/>
+        </fileset>        
+        <pathelement location="${catalina.home}/common/classes"/>
+        <fileset dir="${catalina.home}/common/endorsed">
+            <include name="*.jar"/>
+        </fileset>
+        <fileset dir="${catalina.home}/common/lib">
+            <include name="*.jar"/>
+        </fileset>
+        <pathelement location="${catalina.home}/shared/classes"/>
+        <fileset dir="${catalina.home}/shared/lib">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+    
+    <!--  Load some Tomcat-bundled Ant tasks -->
+    <taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask">
+        <classpath refid="as.j2ee.core.classpath"/>
+    </taskdef>
+    <taskdef name="list" classname="org.apache.catalina.ant.ListTask">
+        <classpath refid="as.j2ee.core.classpath"/>
+    </taskdef>
+    <taskdef name="reload" classname="org.apache.catalina.ant.ReloadTask">
+        <classpath refid="as.j2ee.core.classpath"/>
+    </taskdef>
+    <taskdef name="undeploy" classname="org.apache.catalina.ant.UndeployTask">
+        <classpath refid="as.j2ee.core.classpath"/>
+    </taskdef>
+    <taskdef name="validate" classname="org.apache.catalina.ant.ValidatorTask">
+        <classpath refid="as.j2ee.core.classpath"/>
+    </taskdef>
+    
+    <!-- 
+     Targets defined for the application server and invoked in the build script.
+     Each target may require properties or other assets to be set by the build script
+     before invoking them, as noted in the comments before each target.
+    -->
+    
+    <!-- Target: as-create-war
+       Creates a web component archive.  If necessary, this target can post-process
+       the war file if the application server requires it.  The build script is expected
+       to initialize the following properties before calling this target:
+       
+       Required:
+          as.war.name:               A name to be used as the base of the war filename,
+                                     and in reporting progress while executing the target.
+          as.war.dir:                The directory in which to create the war file.
+          as.war.webxml.file:        The path to the file to be used as the web.xml deployment
+                                     descriptor for this war file.
+                            
+       Optional:
+          as.war.files.patternset:   The name of a patternset that specifies all files
+                                     to be included in the base directory of the archive.
+          as.war.files.basedir:      The base directory to be used with the war.patternset.
+          as.war.lib.patternset:     The name of a patternset that specifies all of the 
+                                     jars to be included in the war's WEB-INF/lib directory.
+          as.war.lib.basedir:        The base directory to be used with the war.lib.patternset.
+          as.war.classes.patternset: The name of a patternset that specifies all of the
+                                     files to be included in the war's WEB-INF/classes
+                                     directory.  This patternset can include Java classes,
+                                     Java properties files, etc. as needed by the web 
+                                     components.
+          as.war.classes.basedir:    The base directory to be used with the 
+                                     war.classes.patternset.
+          as.war.webinf.patternset:  The name of a patternset that specifies all of the files
+                                     to be included directly in the WEB-INF directory of
+                                     the war.
+          as.war.webinf.basedir:     The base directory to be used with the 
+                                     war.webinf.patternset.
+          as.war.metainf.patternset: The name of a patternset that specifies all files to be
+                                     included in the META-INF directory of the archive.
+          as.war.metainf.basedir:    The base directory to be used with the 
+                                     war.metainf.patternset. 
+                                  
+     Example:
+          The simplest usage of this target is:
+          
+          <!- - Define the patternsets to be used in the creation of web archives - ->
+          <patternset id="core-ui.files">
+              <exclude name="utils/**"/>
+          </patternset>
+          <patternset id="utils-ui.files">
+              <include name="utils/**"/>
+          </pattternset>
+          <target name="build-app-wars">
+              <!- - Create the war for the core UI, store in core-ui.war - ->
+              <antcall target="as-create-war">
+                  <param name="as.war.name" value="core-ui"/>
+                  <param name="as.war.dir" value="${basedir}"/>
+                  <param name="as.war.webxml.file" value="config/core-web.xml"/>
+                  <param name="as.war.basedir" value="web"/>
+                  <param name="as.war.patternset" value="core-ui.files"/>
+              </antcall>
+              <!- - Create the war for the utils, store in utils-ui.war - ->
+              <antcall target="as-create-war">
+                  <param name="as.war.name" value="utils-ui"/>
+                  <param name="as.war.dir" value="${basedir}"/>
+                  <param name="as.war.webxml.file" value="config/utils-web.xml"/>
+                  <param name="as.war.basedir" value="web"/>
+                  <param name="as.war.patternset" value="utils-ui.files"/>
+              </antcall>
+          </target>
+    -->
+    <target name="as-create-war">
+        <!-- Fail if any required properties aren't set -->
+        <fail unless="as.war.name" 
+              message="Required property 'as.war.name' not set"/>
+        <fail unless="as.war.webxml.file" 
+              message="Required property 'as.war.webxml.file' not set"/>
+              
+        <!-- Set any optional, unset properties to defaults -->
+        <patternset id="nullset">
+            <exclude name="**"/>
+        </patternset>
+        <condition property="as.war.files.patternset" value="nullset">
+            <not>
+                <isset property="as.war.files.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.files.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.files.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.lib.patternset" value="nullset">
+            <not>
+                <isset property="as.war.lib.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.lib.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.lib.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.classes.patternset" value="nullset">
+            <not>
+                <isset property="as.war.classes.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.classes.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.classes.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.webinf.patternset" value="nullset">
+            <not>
+                <isset property="as.war.webinf.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.webinf.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.webinf.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.metainf.patternset" value="nullset">
+            <not>
+                <isset property="as.war.metainf.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.metainf.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.metainf.basedir"/>
+            </not>
+        </condition>
+        
+        <!-- Tomcat supports the inclusion of a context.xml deployment file
+             in the META-INF dir of the war.  We look for a context.xml
+             in the same directory as the specified web deployment descriptor,
+             and if it's there, we copy it into the META-INF -->
+        <dirname property="tomcat.ctx.dir" file="${as.war.webxml.file}"/>
+        <property name="tomcat.ctx.file" value="context.xml"/>
+        
+        <!-- Invoke the war task to generate the war file -->
+        <war warfile="${as.war.dir}/${as.war.name}.war" webxml="${as.war.webxml.file}">
+            <!-- Include any files specified by the as.war.patternset into the root
+                 or the web archive. -->
+            <fileset dir="${as.war.files.basedir}">
+                <patternset refid="${as.war.files.patternset}"/>
+            </fileset>
+            
+            <!-- Include any files specified by the as.war.lib.patternset into the 
+                 WEB-INF/lib directory of the archive. -->
+            <lib dir="${as.war.lib.basedir}">
+                <patternset refid="${as.war.lib.patternset}"/>
+            </lib>
+            
+            <!-- Include any files specified by the as.war.classes.patternset into
+                 the WEB-INF/classes directory of the archive. -->
+            <classes dir="${as.war.classes.basedir}">
+                <patternset refid="${as.war.lib.patternset}"/>
+            </classes>
+            
+            <!-- Include any files specified by the as.war.webinf.patternset into
+                 the WEB-INF directory of the archive. -->
+            <webinf dir="${as.war.webinf.basedir}">
+                <patternset refid="${as.war.webinf.patternset}"/>
+            </webinf>
+            
+            <!-- Include any files specified by the as.war.metainf.patternset into
+                 the META-INF directory of the archive. -->
+            <metainf dir="${as.war.metainf.basedir}">
+                <patternset refid="${as.war.metainf.patternset}"/>
+            </metainf>
+            <metainf dir="${tomcat.ctx.dir}">
+                <patternset includes="${tomcat.ctx.file}"/>
+            </metainf>
+        </war>
+    </target>
+    
+    <!-- Target: as-create-ejb-jar
+         Creates an EJB archive deployable to the target application server.  -->
+    <target name="as-create-ejb-jar" >
+        <fail message="Tomcat does not support EJB components"/>
+    </target>
+    
+    <!-- Target: as-create-ear
+         Creates an application archive, performing any pre- or post-processing required,
+         and including any server-specific configuration files required. -->
+    <target name="as-create-ear">
+        <echo message="Creating application ${as.ear.name}"/>
+        
+        <!-- Build the ear, including the specified J2EE deployment descriptor, 
+             and the archive files specified -->
+        <ear destfile="${as.ear.dir}/${as.ear.name}.ear" 
+             appxml="${as.ear.appxml.file}">
+            <fileset dir="${as.ear.module.dir}">
+                <patternset refid="${as.ear.module.patternset}"/>
+            </fileset>
+        </ear>
+    </target>
+    
+    <!-- Target: as-verify-module
+         Verifies a component or application module, ensuring that it follows the 
+         J2EE specs and (optionally) the requirements of the application server in use. -->
+    <target name="as-verify-module">
+        <antcall target="tomcat-verify-war">
+            <param name="deploy.file" value="as.module.file"/>
+        </antcall>
+        <antcall target="tomcat-verify-other">
+            <param name="deploy.file" value="as.module.file"/>
+        </antcall>
+    </target>
+    
+    <target name="tomcat-verify-war"
+            depends="check-deploy-file"
+            if="deploy-is-war">
+        <!-- Unpack the war file and run the Tomct validator on the war dir -->
+        <mkdir dir="tomcat-war-tmp"/>
+        <unjar src="${deploy.file}" dest="tomcat-war-tmp"/>
+        <validate path="tomcat-war-tmp"/>
+        <delete dir="tomcat-war-tmp"/>
+    </target>
+    
+    <target name="tomcat-verify-other"
+            depends="check-deploy-file"
+            unless="deploy-is-war">
+        <fail message="Tomcat can only validate war archives."/>
+    </target>
+    
+    <target name="as-server-start">
+        <echo message="Tomcat start target is disabled, start the server manually"/>
+    </target>
+
+    <target name="as-server-stop">
+        <echo message="Tomcat stop target is disabled, stop the server manually"/>
+    </target>    
+    
+    <!-- Target: as-deploy
+           Deploys the app war/ear specified by the as.deploy.file property to the
+           application server named by the as.deploy.server property. -->
+    <target name="as-deploy">
+        <echo message="Deploying ${as.deploy.file} to Tomcat server running on ${as.http.hostname}:${as.http.port}"/>
+        <antcall target="tomcat-deploy-ear">
+            <param name="deploy.file" value="${as.deploy.file}"/>
+        </antcall>
+        <antcall target="tomcat-deploy-war">
+            <param name="deploy.file" value="${as.deploy.file}"/>
+        </antcall>
+        <!-- Pause for the as.deploy.delay interval, to allow deployment to 
+             complete before any tasks following this are run.  Some of the
+             followup tasks might depend on the deployment being complete -->
+        <echo message="Pausing ${as.deploy.delay} seconds to allow deploy to complete..."/>
+        <sleep seconds="${as.deploy.delay}"/>       
+    </target>
+    
+    <!-- Check a deploy file provided by the build script, named by
+         the deploy.file property.  Set the deploy-is-war property if it's 
+         a war file, deploy-is-ear if it's an ear, and deploy-is-jar if it's
+         a jar -->
+    <target name="check-deploy-file">
+        <condition property="deploy-is-war">
+            <contains string="${deploy.file}" substring=".war"/>
+        </condition>
+        <condition property="deploy-is-ear">
+            <contains string="${deploy.file}" substring=".ear"/>
+        </condition>
+        <condition property="deploy-is-jar">
+            <contains string="${deploy.file}" substring=".jar"/>
+        </condition>
+    </target>
+    
+    <target name="tomcat-deploy-war"
+            depends="check-deploy-file"
+            if="deploy-is-war">
+        <!-- Assume that the Tomcat server is configured to do auto-deploy,
+             and just copy the war file to the webapps dir.  Alternative
+             would be to use the deploy task provided by Tocmat, but 
+             this is easier and doesn't require you to set up the admin 
+             username and password. -->
+        <copy todir="${catalina.home}/webapps" file="${deploy.file}"/>
+    </target>   
+    
+    <target name="tomcat-deploy-ear"
+            depends="check-deploy-file"
+            if="deploy-is-ear"> 
+        <!-- Tomcat can only deal with web components, so we unpack the ear
+             and deploy each war file we find inside as independent web apps -->
+        <echo message="Tomcat can only deploy war files, so ${deploy.file}"/>
+        <echo message="will be examined and any wars will be deployed individually."/>
+        <mkdir dir="tomcat-ear-tmp"/>
+        <unjar src="${deploy.file}"
+               dest="tomcat-ear-tmp"/>
+        <copy todir="${catalina.home}/webapps">
+            <fileset dir="tomcat-ear-tmp">
+                <include name="*.war"/>
+            </fileset>
+        </copy>
+        <delete dir="tomcat-ear-tmp"/>
+    </target>
+    
+    <!-- Target: as-clean
+          Instructs the application server module to clean up any internal
+          artefacts created by its targets. -->
+    <target name="as-clean">
+        <!-- Tomcat module doesn't create any internal artifacts that need
+             to be cleaned up, so nothing to do here. -->
+        <echo message="No cleanup necessary for the Tomcat module..."/>
+    </target>
+</project>

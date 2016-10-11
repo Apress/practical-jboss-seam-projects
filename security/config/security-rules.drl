@@ -1,0 +1,12 @@
+package org.jimfarley.gadgets;
+
+import org.jboss.seam.security.PermissionCheck;
+import org.jboss.seam.security.Role;
+
+rule UserIsAdmin
+	when
+		p: PermissionCheck(name == "gadget", action == "edit")
+		Role(name == "ADMIN")
+	then
+		p.grant();
+end;

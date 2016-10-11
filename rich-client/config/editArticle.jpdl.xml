@@ -1,0 +1,45 @@
+<!-- jPDL for the article editing example in the chapter introduction. -->
+<process-definition name="edit-article">
+    <start-state name="start">
+        <transition to="write-article" />
+    </start-state>
+    
+    <task-node name="write-article">
+        <task name="write-article">
+            <assignment actor-id="#{actor.id}"/>
+            <!-- <assignment pooled-actors="AUTHOR"/> -->
+        </task>
+        <transition name="submit" to="edit fork" />
+        <transition name="cancel" to="end" />
+    </task-node>
+    
+    <fork name="edit fork">
+        <transition name="tech-edit" to="technical edit" />
+        <transition name="copy-edit" to="copy edit" />
+    </fork>
+    
+    <task-node name="technical edit">
+        <task name="technical edit">
+            <assignment pooled-actors="EDITOR"/>
+        </task>
+        <transition to="edit join" />
+    </task-node>
+    
+    <task-node name="copy edit">
+        <task name="copy edit">
+            <assignment pooled-actors="EDITOR"/>
+        </task>
+        <transition to="edit join" />
+    </task-node>
+    
+    <join name="edit join">
+        <transition to="revise article" />
+    </join>
+    
+    <task-node name="revise article">
+        <transition name="re-submit" to="edit fork" />
+        <transition name="complete" to="end" />
+    </task-node>
+    
+    <end-state name="end" />
+</process-definition>

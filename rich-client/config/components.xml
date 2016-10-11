@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns="http://jboss.com/products/seam/components"
+            xmlns:core="http://jboss.com/products/seam/core"
+            xmlns:security="http://jboss.com/products/seam/security"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:drools="http://jboss.com/products/seam/drools"
+            xsi:schemaLocation=
+                "http://jboss.com/products/seam/core http://jboss.com/products/seam/core-1.2.xsd
+                 http://jboss.com/products/seam/components http://jboss.com/products/seam/components-1.2.xsd 
+                 http://jboss.com/products/seam/security http://jboss.com/products/seam/security-1.2.xsd">
+    <!-- Install the Seam core internal component -->
+    <component name="org.jboss.seam.core.init">
+        <!-- JNDI name pattern for JBoss EJB 3.0.
+             Note that this needs to match the EJB
+             container being used. -->
+        <property name="jndiPattern">@project.name@/#{ejbName}/local</property>
+        <property name="myFacesLifecycleBug">true</property>        
+    </component>    
+    <component class="org.jboss.seam.core.Ejb" 
+               installed="false"/>    
+    <!-- Set the conversation timeout to 2 minutes -->
+    <component name="org.jboss.seam.core.manager">
+        <property name="conversationTimeout">120000</property>
+    </component>
+    <!-- Set up a Seam-managed persistence context -->
+    <component name="gadgetDatabase"
+               class="org.jboss.seam.core.ManagedPersistenceContext">
+        <property name="persistenceUnitJndiName">java:/EntityManagerFactories/gadgetDatabase</property>
+    </component>
+    <!-- Install jPBM support -->
+    <core:jbpm>
+        <property name="pageflowDefinitions">
+            <value>newUser.jpdl.xml</value>
+            <value>newGadget.jpdl.xml</value>
+        </property>
+        <property name="processDefinitions">
+            <value>editArticle.jpdl.xml</value>
+            <value>reviewGadgets.jpdl.xml</value>
+        </property>
+    </core:jbpm>
+    <!-- Setup the Seam security component -->
+    <security:identity authenticate-method="#{login.login}"/>
+    <!-- Security requires a rules file, even if you have no rules (???) -->
+    <drools:rule-base name="securityRules">
+        <drools:rule-files>
+            <value>/META-INF/security-rules.drl</value>
+        </drools:rule-files>
+    </drools:rule-base>
+    <!-- Configure the security events so that users are brought back to
+         protected pages once they authenticate -->
+    <event type="org.jboss.seam.notLoggedIn">
+        <action expression="#{redirect.captureCurrentView}"/>
+    </event>
+    
+    <event type="org.jboss.seam.postAuthenticate">
+        <action expression="#{redirect.returnToCapturedView}"/>
+    </event>
+    
+    <component name="org.jboss.seam.remoting.remoting">
+        <property name="debug">true</property>
+    </component>
+</components>

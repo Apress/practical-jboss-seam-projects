@@ -1,0 +1,103 @@
+body {
+	background-color: #333333;
+	font-family:Arial, Helvetica, sans-serif;
+	margin-left: 1in;
+	color: #DEDECA;
+}
+
+a {
+	color: #7F9FBF;
+	text-decoration: none;
+	border-top-width: thin;
+	border-right-width: thin;
+	border-bottom-width: thin;
+	border-left-width: thin;
+	border-top-style: none;
+	border-right-style: none;
+	border-bottom-style: none;
+	border-left-style: none;
+	border-top-color: #FFFFCC;
+	border-right-color: #FFFFCC;
+	border-bottom-color: #FFFFCC;
+	border-left-color: #FFFFCC;
+	margin: 2px;
+}
+
+.headerCell {
+	border-top-width: 2px;
+	border-right-width: 2px;
+	border-bottom-width: 2px;
+	border-left-width: 2px;
+	border-top-style: solid;
+	border-bottom-style: solid;
+	border-top-color: #CCCCCC;
+	border-right-color: #CCCCCC;
+	border-bottom-color: #CCCCCC;
+	border-left-color: #CCCCCC;
+	border-right-style: none;
+	border-left-style: none;
+	padding: 4px;
+	vertical-align: middle;
+	font-size: 24px;
+	color: #FFFF99;
+	font-weight: bold;
+}
+
+.headerTable {
+	margin-left: -0.5in;
+}
+
+td {
+	color: #FFFFCC;
+	border: thin none #FFFFCC;
+}
+
+th {
+	background-color: #696969;
+}
+
+.dataCell {
+	color: #FFFFCC;
+	border: thin solid #FFFFCC;
+}
+.datatable {
+	width: 100%;
+}
+
+h1 {
+	color: #FFFF33;
+}
+
+h2 {
+	color: #FFFF66;
+}
+
+h3, h4 {
+	color: #FFFFCC;
+}
+input {
+	background-color: #446179;
+	color: #FFFFCC;
+	padding: 3px;
+}
+.formLabel {
+	color: #FFFFCC;
+	border: thin solid #000000;
+	background-color: #696969;
+}
+.formButton {
+	background-color: #7F9FBF;
+	border-top-style: groove;
+	border-right-style: groove;
+	border-bottom-style: groove;
+	border-left-style: groove;
+	border-top-color: #666666;
+	border-right-color: #666666;
+	border-bottom-color: #666666;
+	border-left-color: #666666;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+h5, h6 {
+	color: #6699CC;
+}

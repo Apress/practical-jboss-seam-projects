@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE faces-config 
+    PUBLIC "-//Sun Microsystems, Inc.//DTD JavaServer Faces Config 1.0//EN"
+    "http://java.sun.com/dtd/web-facesconfig_1_0.dtd">
+    
+<faces-config>
+    <!-- We're using Seam security, so the Seam facelet handler needs to be
+        installed -->
+    <application>
+        <view-handler>org.jboss.seam.ui.facelet.SeamFaceletViewHandler</view-handler>
+    </application>
+    <!-- Seam needs to be plugged into the JSF lifecycle by 
+         installing its phase listener -->
+    <lifecycle>
+        <phase-listener>
+            org.jboss.seam.jsf.SeamExtendedManagedPersistencePhaseListener
+        </phase-listener>
+    </lifecycle>
+    <!--
+    <lifecycle>
+        <phase-listener>org.jboss.seam.jsf.SeamPhaseListener</phase-listener>
+    </lifecycle>
+    -->
+    <!-- Example page flow from chapter 5.  To see it in action, start with the
+         userHome.xhtml home page, and follow the links from there.   -->
+    <navigation-rule>
+        <from-view-id>/users/userHome.xhtml</from-view-id>
+        <navigation-case>
+            <from-action>#{userAdmin.newUser}</from-action>
+            <to-view-id>/users/addUser.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+    <navigation-rule>
+        <from-view-id>/users/addUser.xhtml</from-view-id>
+        <navigation-case>
+            <from-action>#{userAdmin.saveUser}</from-action>
+            <from-outcome>success</from-outcome>
+            <to-view-id>/users/userHome.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>  
+        <navigation-case>
+            <from-action>#{userAdmin.editRoles}</from-action>
+            <to-view-id>/users/editUserRoles.xhtml</to-view-id>
+        </navigation-case>
+    </navigation-rule>
+    <navigation-rule>
+        <from-view-id>/users/editUserRoles.xhtml</from-view-id>
+        <navigation-case>
+            <from-action>#{userAdmin.addRole}</from-action>
+            <from-outcome>success</from-outcome>
+            <to-view-id>/users/addUser.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+
+    <!-- Navigation rules for the Gadget Catalog -->    
+    <navigation-rule>
+        <navigation-case>
+            <from-action>#{gadgetAdmin.editGadget}</from-action>
+            <from-outcome>success</from-outcome>
+            <to-view-id>/admin/editGadget.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+    <!--
+    <navigation-rule>
+        <navigation-case>
+            <from-action>#{gadgetAdmin.newGadget}</from-action>
+            <to-view-id>/wizard/start.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+    -->
+    <navigation-rule>
+        <navigation-case>
+            <from-action>#{gadgetAdmin.cancelEditGadget}</from-action>
+            <from-outcome>success</from-outcome>
+            <to-view-id>/admin/adminHome.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+    <navigation-rule>
+        <from-view-id>/editGadgetTypes.xhtml</from-view-id>
+        <navigation-case>
+            <from-action>#{gadgetAdmin.doneEdit}</from-action>
+            <to-view-id>/admin/editGadget.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+    <navigation-rule>
+        <from-view-id>/editGadgetFeatures.xhtml</from-view-id>
+        <navigation-case>
+            <from-action>#{gadgetAdmin.doneEdit}</from-action>
+            <to-view-id>/admin/editGadget.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+    <navigation-rule>
+        <from-view-id>/editGadget.xhtml</from-view-id>
+        <navigation-case>
+            <from-action>#{gadgetAdmin.saveGadget}</from-action>
+            <from-outcome>success</from-outcome>
+            <to-view-id>/admin/adminHome.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>  
+    </navigation-rule>
+    <navigation-rule>
+        <navigation-case>
+            <from-action>#{gadgetAdmin.newGadgetType}</from-action>
+            <from-outcome>success</from-outcome>
+            <to-view-id>/admin/editGadget.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+    <navigation-rule>
+        <navigation-case>
+            <from-action>#{gadgetAdmin.search}</from-action>
+            <from-outcome>listGadgets</from-outcome>
+            <to-view-id>/listGadgets.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+    <navigation-rule>
+        <navigation-case>
+            <from-action>#{gadgetAdmin.pickGadget}</from-action>
+            <from-outcome>editGadget</from-outcome>
+            <to-view-id>/admin/editGadget.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+    <navigation-rule>
+        <navigation-case>
+            <from-action>#{gadgetAdmin.listGadgets}</from-action>
+            <to-view-id>/listGadgets.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>
+</faces-config>

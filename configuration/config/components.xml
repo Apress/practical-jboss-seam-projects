@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components>
+    <component name="org.jboss.seam.core.init">
+        <!-- JNDI name pattern for JBoss EJB 3.0 -->
+        <!--
+        <property name="jndiPattern">@project.name@/#{ejbName}/local</property>
+        -->
+        <!-- JNDI name pattern for Glassfish EJB container -->
+        <property name="jndiPattern">@project.name@/#{ejbName}/local</property>
+        <property name="myFacesLifecycleBug">true</property>        
+    </component>
+    
+    <component class="org.jboss.seam.core.Ejb" 
+               installed="false"/>        
+</components>

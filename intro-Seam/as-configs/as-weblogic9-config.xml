@@ -1,0 +1,415 @@
+<!-- Configuration file for WebLogic 9 application servers -->
+
+<!-- Set any server/environment-specific properties here -->
+<project name="weblogic9">
+    <!-- The following are app-server-specific properties that should only
+         be used in the target definitions below.  They should *not* be 
+         referenced in your project build file, unless you don't care about 
+         portability to other app servers. -->
+         
+    <!-- The root of the bea install directory -->
+    <property name="weblogic.bea.home" value="/bea" />
+    <!-- Base directory of the WebLogic 9 installation -->
+    <property name="weblogic.home" value="${weblogic.bea.home}/weblogic90"/>
+    <!-- Home directory of the server -->
+    <property name="weblogic.domain.home"
+              value="${weblogic.bea.home}/user_projects/domains/wls"/>
+    <!-- Name of the server, as used in the wldeploy task -->
+    <property name="weblogic.server.name" value="myserver"/>
+    <!-- Username used to administer server (start/stop/deploy) -->
+    <property name="weblogic.user" value="weblogic" />
+    <!-- Password for admin user -->
+    <property name="weblogic.password" value="weblogic"/>          
+    
+    <!-- 
+     Standard properties and assets.  These should be set to match the configuration
+     of the application server, so that they can be used within the build
+     script if needed. You can use these in your project build file.
+    -->
+    
+    <!-- Property: as.http.port
+               Port number used by web/app server for regular HTTP traffic. -->
+    <property name="as.http.port" value="7001"/>
+    
+    <!-- Property: as.http.hostname
+               Name/IP address of host of app server -->
+    <property name="as.http.hostname" value="localhost"/>
+    
+    <!-- Delay, in seconds, to expect for applications to deploy
+        on this application server. -->
+    <!-- With WebLogic, we use the wldeploy tool directly in the as-deploy
+         target.  The wldeploy tool does not complete until the deployment is
+         finished, so we set the delay here to zero. -->
+    <property name="as.deploy.delay" value="0"/>
+    
+    <!-- **********************************************************************
+         The remainder of the config file should NOT need to be changed, assuming
+         you are using a standard WebLogic setup. 
+         ********************************************************************** -->
+         
+    <!-- Path: as.j2ee.core.classpath
+           Defines set of libraries containing the core J2EE APIs provided
+           by this app server. -->
+    <!-- For WebLogic, we include the main weblogic.jar -->
+    <path id="as.j2ee.core.classpath">
+        <pathelement location="${weblogic.home}/server/lib/weblogic.jar"/>
+    </path>
+    
+    <!-- Import some WebLogic Ant tasks from the distribution -->
+    <taskdef name="wldeploy" classname="weblogic.ant.taskdefs.management.WLDeploy">
+        <classpath refid="as.j2ee.core.classpath"/>
+    </taskdef>
+    <taskdef name="wlserver" classname="weblogic.ant.taskdefs.management.WLServer">
+        <classpath refid="as.j2ee.core.classpath"/>
+    </taskdef>
+    <taskdef name="wlappc" classname="weblogic.ant.taskdefs.j2ee.Appc">
+        <classpath refid="as.j2ee.core.classpath"/>
+    </taskdef>
+    
+    <!-- 
+     Targets defined for the application server and invoked in the build script.
+     Each target may require properties or other assets to be set by the build script
+     before invoking them, as noted in the comments before each target.
+    -->
+    
+    <!-- Target: as-create-war
+       Creates a web component archive.  If necessary, this target can post-process
+       the war file if the application server requires it.  The build script is expected
+       to initialize the following properties before calling this target:
+       
+       Required:
+          as.war.name:               A name to be used as the base of the war filename,
+                                     and in reporting progress while executing the target.
+          as.war.dir:                The directory in which to create the war file.
+          as.war.webxml.file:        The path to the file to be used as the web.xml deployment
+                                     descriptor for this war file.
+                            
+       Optional:
+          as.war.files.patternset:   The name of a patternset that specifies all files
+                                     to be included in the base directory of the archive.
+          as.war.files.basedir:      The base directory to be used with the war.patternset.
+          as.war.lib.patternset:     The name of a patternset that specifies all of the 
+                                     jars to be included in the war's WEB-INF/lib directory.
+          as.war.lib.basedir:        The base directory to be used with the war.lib.patternset.
+          as.war.classes.patternset: The name of a patternset that specifies all of the
+                                     files to be included in the war's WEB-INF/classes
+                                     directory.  This patternset can include Java classes,
+                                     Java properties files, etc. as needed by the web 
+                                     components.
+          as.war.classes.basedir:    The base directory to be used with the 
+                                     war.classes.patternset.
+          as.war.webinf.patternset:  The name of a patternset that specifies all of the files
+                                     to be included directly in the WEB-INF directory of
+                                     the war.
+          as.war.webinf.basedir:     The base directory to be used with the 
+                                     war.webinf.patternset.
+          as.war.metainf.patternset: The name of a patternset that specifies all files to be
+                                     included in the META-INF directory of the archive.
+          as.war.metainf.basedir:    The base directory to be used with the 
+                                     war.metainf.patternset. 
+                                  
+     Example:
+          The simplest usage of this target is:
+          
+          <!- - Define the patternsets to be used in the creation of web archives - ->
+          <patternset id="core-ui.files">
+              <exclude name="utils/**"/>
+          </patternset>
+          <patternset id="utils-ui.files">
+              <include name="utils/**"/>
+          </pattternset>
+          <target name="build-app-wars">
+              <!- - Create the war for the core UI, store in core-ui.war - ->
+              <antcall target="as-create-war">
+                  <param name="as.war.name" value="core-ui"/>
+                  <param name="as.war.dir" value="${basedir}"/>
+                  <param name="as.war.webxml.file" value="config/core-web.xml"/>
+                  <param name="as.war.basedir" value="web"/>
+                  <param name="as.war.patternset" value="core-ui.files"/>
+              </antcall>
+              <!- - Create the war for the utils, store in utils-ui.war - ->
+              <antcall target="as-create-war">
+                  <param name="as.war.name" value="utils-ui"/>
+                  <param name="as.war.dir" value="${basedir}"/>
+                  <param name="as.war.webxml.file" value="config/utils-web.xml"/>
+                  <param name="as.war.basedir" value="web"/>
+                  <param name="as.war.patternset" value="utils-ui.files"/>
+              </antcall>
+          </target> -->
+    <target name="as-create-war">
+        <!-- Fail if any required properties aren't set -->
+        <fail unless="as.war.name" 
+              message="Required property 'as.war.name' not set"/>
+        <fail unless="as.war.webxml.file" 
+              message="Required property 'as.war.webxml.file' not set"/>
+              
+        <!-- WebLogic accepts a weblogic.xml file to configure
+             server deployment details like JNDI names, etc.  We
+             look in the same directory as the specified web.xml 
+             file for a weblogic.xml file, and if present, we place it
+             in the WEB-INF directory below. -->
+        <dirname property="weblogic.dd.dir" file="${as.war.webxml.file}"/>
+        <property name="weblogic.dd.file" value="weblogic.xml"/>
+        
+        <!-- Set any optional, unset properties to defaults -->
+        <patternset id="nullset">
+            <exclude name="**"/>
+        </patternset>
+        <condition property="as.war.files.patternset" value="nullset">
+            <not>
+                <isset property="as.war.files.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.files.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.files.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.lib.patternset" value="nullset">
+            <not>
+                <isset property="as.war.lib.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.lib.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.lib.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.classes.patternset" value="nullset">
+            <not>
+                <isset property="as.war.classes.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.classes.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.classes.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.webinf.patternset" value="nullset">
+            <not>
+                <isset property="as.war.webinf.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.webinf.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.webinf.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.metainf.patternset" value="nullset">
+            <not>
+                <isset property="as.war.metainf.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.metainf.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.metainf.basedir"/>
+            </not>
+        </condition>
+        
+        <!-- Invoke the war task to generate the war file -->
+        <war warfile="${as.war.dir}/${as.war.name}.war" webxml="${as.war.webxml.file}">
+            <!-- Include any files specified by the as.war.patternset into the root
+             or the web archive. -->
+            <fileset dir="${as.war.files.basedir}">
+                <patternset refid="${as.war.files.patternset}"/>
+            </fileset>
+            
+            <!-- Include any files specified by the as.war.lib.patternset into the 
+             WEB-INF/lib directory of the archive. -->
+            <lib dir="${as.war.lib.basedir}">
+                <patternset refid="${as.war.lib.patternset}"/>
+            </lib>
+            
+            <!-- Include any files specified by the as.war.classes.patternset into
+             the WEB-INF/classes directory of the archive. -->
+            <classes dir="${as.war.classes.basedir}">
+                <patternset refid="${as.war.lib.patternset}"/>
+            </classes>
+            
+            <!-- Include any files specified by the as.war.webinf.patternset into
+             the WEB-INF directory of the archive. -->
+            <webinf dir="${as.war.webinf.basedir}">
+                <patternset refid="${as.war.webinf.patternset}"/>
+            </webinf>
+            <!-- Also include the WebLogic deployment descriptor -->
+            <webinf dir="${weblogic.dd.dir}">
+                <patternset includes="${weblogic.dd.file}"/>
+            </webinf>
+            
+            <!-- Include any files specified by the as.war.metainf.patternset into
+             the META-INF directory of the archive. -->
+            <metainf dir="${as.war.metainf.basedir}">
+                <patternset refid="${as.war.metainf.patternset}"/>
+            </metainf>
+        </war>
+    </target>
+    
+    <!-- Target: as-create-ejb-jar
+         Creates an EJB archive deployable to the target application server.  -->
+    <target name="as-create-ejb-jar" >
+        <echo message="Generating EJB archive '${as.ejb.name}'"/>
+        <!-- Set any optional, unset fileset properties to defaults -->
+        <patternset id="nullset">
+            <exclude name="**"/>
+        </patternset>
+        
+        <!-- Check for the optional support file properties -->
+        <condition property="as.ejb.support.patternset" value="nullset">
+            <not>
+                <isset property="as.ejb.support.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.ejb.support.basedir" value="${basedir}">
+            <not>
+                <isset property="as.ejb.support.basedir"/>
+            </not>
+        </condition>
+        
+        <!-- Invoke the ejbjar task, looking for deployment descriptors
+             in the ${as.ejb.desc.dir} directory.  We are using "directory"-based
+             naming here, where the name of the directory containing the EJB 
+             deployment descriptor is used as the basis for the ejb-jar filename. -->
+        <!-- Rather than use the embedded "weblogic" element on ejbjar, we
+             are using the generic version to simply construct a valid ejb-jar,
+             including the weblogic-specific deployment files as well.  
+             The "weblogic" element in ejbjar still uses ejbc, which is 
+             deprecated in WebLogic 8.1 and 9.  Rather than using the new 
+             appc tool (which is awkward to configure in a generic way here,
+             since it depends on having a valid weblogic.home property passed
+             to it, and/or access to the JDK tools.jar), we simply deploy the
+             generic jar generated here and let the app server generate and 
+             compile any needed support classes when the ejb-jar is deployed. -->       
+        <ejbjar descriptordir="${as.ejb.desc.dir}"
+                srcdir="${as.ejb.classes.dir}"
+                destdir="${as.ejb.jar.dir}"
+                naming="basejarname"
+                basejarname="${as.ejb.name}"
+                genericjarsuffix=".jar"
+                flatdestdir="true"
+                dependency="full"
+                cmpversion="2.0">
+            
+            <classpath>
+                <path refid="as.j2ee.core.classpath"/>
+                <pathelement location="${java.classes.dir}"/>
+            </classpath>
+                                
+            <!-- Only look for EJB descriptors in files ending with "ejb-jar.xml" -->
+            <include name="**/*ejb-jar.xml"/>
+            <!-- Don't try to parse any WebLogic descriptors, those will be
+                 added below by hand and parsed by weblogic.appc -->
+            <exclude name="**/weblogic-*-jar.xml"/>
+            
+            <!-- Include any specified support files in the module. -->
+            <support dir="${as.ejb.support.basedir}">
+                <patternset refid="${as.ejb.support.patternset}"/>
+            </support>
+        </ejbjar>
+        
+        <!-- Unpack the resulting EJB jar into a temp directory -->
+        <mkdir dir="as.ejb.jar.tmp"/>
+        <unjar src="${as.ejb.name}.jar" dest="as.ejb.jar.tmp"/>
+        <!-- Move any weblogic descriptors found in the config dir into
+             the META-INF dir -->
+        <copy todir="as.ejb.jar.tmp/META-INF">
+            <fileset dir="${as.ejb.desc.dir}">
+                <include name="weblogic-*-jar.xml"/>
+            </fileset>
+        </copy>
+        <!-- Reassemble the ejb-jar file -->
+        <jar basedir="as.ejb.jar.tmp" 
+             destfile="${as.ejb.name}.jar"
+             update="false"/>
+        
+        <!-- Clean up after ourselves -->
+        <delete dir="as.ejb.jar.tmp"/>
+    </target>
+    
+    <!-- Target: as-create-ear
+         Creates an application archive, performing any pre- or post-processing
+         required, and including any server-specific configuration files 
+         required. -->
+    <target name="as-create-ear">
+        <echo message="Creating application ${as.ear.name}"/>
+        
+        <!-- Assume that the WebLogic application deployment file 
+             (weblogic-application.xml) is located in the same directory as
+             the J2EE standard app deployment descriptor -->
+        <dirname property="weblogic.dd.dir" file="${as.ear.appxml.file}"/>
+        <property name="weblogic.dd.file" value="weblogic-application.xml"/>
+        
+        <!-- Build the ear, including the specified J2EE deployment 
+             descriptor, the archive files specified, and the WebLogic
+             deployment descriptor, if present -->
+        <ear destfile="${as.ear.dir}/${as.ear.name}.ear" appxml="${as.ear.appxml.file}">
+            <fileset dir="${as.ear.module.dir}">
+                <patternset refid="${as.ear.module.patternset}"/>
+            </fileset>
+            <metainf dir="${weblogic.dd.dir}">
+                <patternset includes="${weblogic.dd.file}"/>
+            </metainf>
+        </ear>
+    </target>
+    
+    <!-- Target: as-verify-module
+         Verifies a component or application module, ensuring that it follows the 
+         J2EE specs and (optionally) the requirements of the application server in use. -->
+    <target name="as-verify-module">
+        <echo message="Verifying module ${as.module.file}"/>
+        <!-- Run the WebLogic appc utility on the module. -->
+        <wlappc source="${as.module.file}">
+            <classpath refid="as.j2ee.core.classpath"/>
+            <arg line="${as.module.file}"/>
+        </wlappc>
+    </target>
+    
+    <target name="as-server-start"
+            description="Start the WebLogic server">
+        <echo message="Starting WebLogic server running on ${as.http.hostname}:${as.http.port}"/>
+        <!-- Start the server using the wlserver task -->
+        <wlserver dir="${weblogic.domain.home}" 
+                  host="${as.http.hostname}"
+                  port="${as.http.port}"
+                  username="${weblogic.user}"
+                  password="${weblogic.password}"
+                  action="startup"/>
+    </target>
+
+    <target name="as-server-stop"
+            description="Stop the WebLogic server">
+        <echo message="Stopping WebLogic server running on ${as.http.hostname}:${as.http.port}"/>
+        <!-- Stop the server using the wlserver task -->
+        <wlserver dir="${weblogic.domain.home}" 
+                  host="${as.http.hostname}"
+                  port="${as.http.port}"
+                  username="${weblogic.user}"
+                  password="${weblogic.password}"
+                  action="shutdown"/>
+    </target>    
+    
+    <!-- Target: as-deploy
+           Deploys the app war/ear specified by the as.deploy.file property to the
+           application server named by the as.deploy.server property. -->
+    <target name="as-deploy">
+        <echo message="Deploying ${as.deploy.file} to JBoss server ${jboss.server.name}..."/>
+        <!-- Use the wldeploy target to deploy the app.  This enables remote
+             deployment, and also allows you to see deployment issues 
+             while the Ant job is running. -->
+        <wldeploy action="deploy"
+                  source="${as.deploy.file}"
+                  name="${ant.project.name}"
+                  user="${weblogic.user}" 
+                  password="${weblogic.password}" 
+                  verbose="true" 
+                  adminurl="t3://${as.http.hostname}:${as.http.port}"
+                  debug="true"
+                  targets="${weblogic.server.name}"/>
+    </target>
+    
+    <!-- Target: as-clean
+          Instructs the application server module to clean up any internal
+          artefacts created by its targets. -->
+    <target name="as-clean">
+        <delete dir="as.ejb.jar.tmp"/>
+    </target>
+</project>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Define a page flow for the "new user" wizard,
+     linked off of the administrative home page. -->
+<pageflow-definition name="new-user">
+    <start-page name="add-user" view-id="/users/addUser.jsp">
+        <transition name="save" to="home">
+            <action expression="#{userAdmin.saveUser}"/>
+        </transition>
+        <transition name="editRoles" to="edit-roles"/>
+        <redirect/>
+    </start-page>  
+    
+    <page name="edit-roles" view-id="/users/editUserRoles.jsp">
+        <transition name="success" to="add-user"/>
+        <redirect/>
+    </page>
+    
+    <page name="home" view-id="/users/userHome.jsp">
+        <end-conversation/>
+        <redirect/>
+    </page>
+</pageflow-definition>

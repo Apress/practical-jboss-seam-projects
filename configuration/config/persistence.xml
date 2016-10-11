@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
+                                 http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
+             version="1.0">
+    <!-- Configure to use Hibernate with the default DataSource in JBoss -->
+    <persistence-unit name="gadgetDatabase">
+        <provider>org.hibernate.ejb.HibernatePersistence</provider>
+        <jta-data-source>java:/DefaultDS</jta-data-source>
+        <properties>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="hibernate.show_sql" value="true"/>
+        </properties>
+    </persistence-unit>
+    <!-- Configure to use TopLink with the default DataSource in Glassfish -->
+    <!--
+    <persistence-unit name="gadgetDatabase">
+        <jta-data-source>jdbc/__default</jta-data-source>
+        <properties>
+            <property name="toplink.ddl-generation" value="drop-and-create-tables"/>
+        </properties>
+    </persistence-unit>
+    -->    
+</persistence>

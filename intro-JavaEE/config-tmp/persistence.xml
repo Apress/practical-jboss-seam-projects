@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
+                                 http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
+             version="1.0">
+    <persistence-unit name="gadgetDatabase" transaction-type="JTA">
+        <!-- JBoss settings 
+        <provider>org.hibernate.ejb.HibernatePersistence</provider>
+        <jta-data-source>java:/DefaultDS</jta-data-source>
+        <properties>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+        </properties>
+        --> 
+        <!-- Glassfish settings.  You will need to configure a data source
+             named "gadgetDB" in the Glassfish admin tool. -->
+        <provider>oracle.toplink.essentials.ejb.cmp3.EntityManagerFactoryProvider</provider>
+        <jta-data-source>jdbc/gadgetDB</jta-data-source>
+        <properties>
+            <property name="toplink.platform.class.name"
+                      value="oracle.toplink.essentials.platform.database.DB2Platform"/>            
+            <property name="toplink.ddl-generation" value="drop-and-create-tables"/>
+        </properties>
+    </persistence-unit>
+</persistence>

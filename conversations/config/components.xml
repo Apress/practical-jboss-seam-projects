@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components>
+    <!-- Install the Seam core internal component -->
+    <component name="org.jboss.seam.core.init">
+        <!-- JNDI name pattern for JBoss EJB 3.0.
+             Note that this needs to match the EJB
+             container being used. -->
+        <property name="jndiPattern">@project.name@/#{ejbName}/local</property>
+        <property name="myFacesLifecycleBug">true</property>        
+    </component>    
+    <component class="org.jboss.seam.core.Ejb" 
+               installed="false"/>    
+    <!-- Set the conversation timeout to 2 minutes -->
+    <component name="org.jboss.seam.core.manager">
+        <property name="conversationTimeout">120000</property>
+    </component>
+    <!-- Set up a Seam-managed persistence context -->
+    <component name="gadgetDatabase"
+               class="org.jboss.seam.core.ManagedPersistenceContext">
+        <property name="persistenceUnitJndiName">java:/EntityManagerFactories/gadgetDatabase</property>
+    </component>
+</components>

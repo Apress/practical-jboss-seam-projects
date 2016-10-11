@@ -1,0 +1,387 @@
+<!-- 
+   Practical Seam: Configuration examples. 
+-->
+    
+<project name="PracticalSeam-Configuration" default="deploy-app">
+    <!-- Import any local build properties for this project
+         We load them first, so that any properties defined in either
+         the default build.properties file or the server config file
+         can be overridden by the user, if needed. -->
+    <property file="local-build.properties"/>
+    
+    <!-- Import our default build properties -->   
+    <property file="build.properties"/>
+    
+    <!-- Import the server configuration defined in the above properties files -->
+    <import file="${as.config.file}"/>
+        
+    <path id="seam.core.jars">
+        <fileset dir="${seam.home.dir}">
+            <include name="jboss-seam.jar"/>
+            <include name="jboss-seam-ui.jar"/>
+        </fileset>
+        <fileset dir="${seam.home.dir}/lib">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+    
+    <!-- Define the classpath to use for compiling code. -->
+    <path id="java.compile.classpath">
+        <path refid="as.j2ee.core.classpath"/>
+        <path refid="seam.core.jars"/>
+    </path>
+    
+    <!-- A patternset that selects only the web service client source code
+         from the project source directory.  The web service clients may
+         depend on the service being deployed and running before their support
+         stubs can be generated (depending on the web service engine being
+         used).  So we may want to compile and deploy the rest of the project
+         before generating the client stubs and then compiling this code -->
+    <patternset id="project.client.src.files">
+        <include name=""/>
+    </patternset>
+        
+    <!-- A patternset that defines the application source Java files 
+         intended for this project, selected from within the directory
+         specified in the java.src.dir property. -->
+    <patternset id="project.src.files">
+        <include name="**/*.java"/>
+    </patternset>
+    
+    <target name="compile"
+            description="Compile all project source into the classes dir">
+        <!-- Create the classes dir, if needed -->
+        <mkdir dir="${java.classes.dir}"/>
+        <!-- Compile the core project java code into classes -->
+        <javac srcdir="${java.src.dir}" 
+               destdir="${java.classes.dir}"
+               classpathref="java.compile.classpath"
+               debug="${java.debug}">
+            <patternset refid="project.src.files"/>
+        </javac>
+    </target>
+    
+    <target name="compile-clients"
+            description="Compile any clients included in the project">
+        <javac srcdir="${java.src.dir}"
+               destdir="${java.classes.dir}"
+               classpathref="java.compile.classpath"
+               debug="${java.debug}">
+            <patternset refid="project.client.src.files"/>
+        </javac>
+    </target>
+        
+    <!-- Create an application assembly from the various component 
+         archives built as part of this project.  The create-wars and
+         create-ejbjars targets (dependencies for this target) assemble
+         the component archives from the generated/compiled code and other
+         config files. We use the as-create-ear target imported from the
+         application server config file to actually put together the ear
+         file, to ensure that the archive prepared to suit the particular
+         app server in use (e.g., app-server-specific config files are
+         included, pre-deployment verification is run, etc.) -->
+    <target name="create-app"
+            description="Generate an application assembly from the component archives"
+            depends="create-wars, create-ejbjars">
+        <!-- Delete any existing ear files from previous builds -->
+        <delete>
+           <fileset dir="${basedir}">
+              <include name="*.ear"/>
+           </fileset>
+        </delete>
+        <!-- Create a temp dir to hold the contents of the ear -->
+        <mkdir dir="ear-tmp"/>
+        <!-- Copy the necessary files into the temp dir -->
+        <copy flatten="true" todir="ear-tmp">
+            <fileset dir="${basedir}">
+                <include name="*.war"/>
+                <include name="*.jar"/>
+            </fileset>
+            <fileset dir="${seam.home.dir}">
+                <include name="jboss-seam.jar"/>
+            </fileset>
+            <fileset dir="${seam.home.dir}/lib">
+                <include name="jsf-facelets.jar"/>
+                <include name="el-api.jar"/>
+                <include name="el-ri.jar"/>
+            </fileset>
+        </copy>
+		<!-- Define a pattern that selects the module files to include in
+             the ear file, from the temp directory -->
+        <patternset id="module-files">
+            <include name="**"/>
+        </patternset>
+        <!-- Run the as-create-ear target imported from the app server
+             config file, specifying the application.xml file to use, the
+             module files to include, etc. -->
+        <antcall target="as-create-ear">
+            <param name="as.ear.name" value="${ant.project.name}"/>
+            <param name="as.ear.dir" value="${basedir}"/>
+            <param name="as.ear.appxml.file"
+                   value="${config.dir}/application.xml"/>
+            <param name="as.ear.module.dir" value="ear-tmp"/>
+            <param name="as.ear.module.patternset" value="module-files"/>
+        </antcall>
+        <!-- Clean up the temp dir -->
+        <delete dir="ear-tmp"/> 
+    </target>
+    
+    <!-- Verify the application archive using the application server's
+         verifier, if present -->
+    <target name="verify-app"
+            description="Verify the application archive to ensure it's deployable"
+            depends="create-app">
+        <antcall target="as-verify-module">
+            <param name="as.module.file"
+                   value="${basedir}/${ant.project.name}.ear"/>
+        </antcall>
+    </target>     
+   
+    <!-- Deploy our application to our application server -->
+    <target name="deploy-app"
+            description="Deploy our application archive to our application server"
+            unless="unit-tests-failed">
+        <!-- Copy the entire config dir to a temp copy, and do token
+             replacement on everything there. -->
+        <delete dir="${config.dir}-tmp"/>
+        <copy todir="${config.dir}-tmp">
+            <fileset dir="${config.dir}"/>
+            <filterset>
+                <filter token="project.name" value="${ant.project.name}"/>
+            </filterset>
+        </copy>
+        <!-- Create the application archive -->
+        <antcall target="create-app">
+            <param name="config.dir" value="${config.dir}-tmp"/>
+        </antcall>
+		<antcall target="as-deploy">
+            <param name="as.deploy.file"
+                   value="${basedir}/${ant.project.name}.ear"/>
+            <param name="as.deploy.name" value="${ant.project.name}"/>
+            <param name="as.deploy.server.id" value="default"/>
+        </antcall>
+        <!-- Clean up -->
+        <delete dir="${config.dir}-tmp"/>
+    </target>
+    
+    <!-- Perform any cleanup, removing any temporary artefacts
+         created from other targets -->
+    <target name="clean"
+            description="Remove all artifacts created from the other targets">
+        <!-- Remove the classes dir created by the compile target -->
+        <delete dir="${java.classes.dir}"/>
+        <!-- Remove the test classes dir created by the compile-tests target -->
+        <delete dir="${java.test.classes.dir}"/>
+        <!-- Remove all jars created by the archive and create-xxx targets -->
+        <delete>
+           <fileset dir="${basedir}" includes="*.jar"/>
+        </delete>
+        <!-- Remove any generated wars -->
+        <delete>
+            <fileset dir="${basedir}" includes="*.war"/>
+        </delete>
+        <!-- Remove the temporary META-INF dir created in the 
+             create-ejbjars target -->
+        <delete dir="ejbjar-metainf-tmp"/>
+        <!-- Delete any application archives -->
+        <delete>
+            <fileset dir="${basedir}" includes="*.ear"/>
+        </delete>
+        <!-- Remove any source archives created with src-dist -->
+        <delete file="${ant.project.name}-src.zip"/>
+        <!-- Remove all test results files -->
+        <delete>
+            <fileset dir="${basedir}" includes="TEST-*.xml"/>
+        </delete>
+        <!-- Delete any auto-generated artifacts -->
+        <delete dir="${generated.dir}"/>
+        <!-- Give the application server module a chance to cleanup -->
+        <antcall target="as-clean"/>
+    </target>
+    
+    <!-- Print out some key environment/property settings -->
+    <target name="env"
+            description="Print out some key environment settings">
+        <echo message="Using application server config file '${as.config.file}'"/>
+    </target>
+        
+    <target name="src-dist"
+            description="Create an archive of the project source">
+        <zip destfile="${ant.project.name}-src.zip" basedir="${java.src.dir}">
+            <patternset refid="project.src.files"/>
+        </zip>
+    </target>
+           
+    <!-- Create a jar file containing all of the compiled Java classes from
+         the examples. -->
+    <target name="create-jar"
+            depends="compile">
+        <jar destfile="${ant.project.name}-classes.jar">
+            <include name="${java.classes.dir}/**"/>
+        </jar>
+    </target>
+    
+    <!-- Create the web archives needed for this application, using the 
+         targets defined in the application server config file imported
+         at the top of this build file. -->   
+    <target name="create-wars" 
+            depends="compile">
+        <!-- Delete any existing war files from previous builds -->
+        <delete>
+           <fileset dir="${basedir}">
+              <include name="*.war"/>
+           </fileset>
+        </delete>
+        
+        <!-- Make a temp directory for the files to be placed in the
+             root of the war file -->
+        <mkdir dir="war-files-tmp" />
+        <copy todir="war-files-tmp">
+            <fileset dir="${web.dir}">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        
+        <!-- Define a pattern for the set of files within the web dir
+             that should be included in the root of the archive. -->   
+        <patternset id="war.files">
+            <include name="**"/>
+        </patternset>
+                
+        <!-- Make a temp directory for the files to be put into the
+             WEB-INF of the war -->
+        <mkdir dir="war-webinf-tmp"/>
+        <copy todir="war-webinf-tmp">
+            <fileset dir="${web.dir}">
+                <include name="*.tld"/>
+            </fileset>
+            <fileset dir="${config.dir}">
+                <include name="faces-config.xml"/>
+                <include name="components.xml"/>
+				<include name="pages.xml"/> 
+            </fileset>
+        </copy>
+        
+        <!-- Pattern for files to be included in the webinf dir from
+             the temp dir. -->
+        <patternset id="war.webinf">
+            <include name="**"/>
+        </patternset>
+        
+        <!-- Make a temp directory for the contents of the classes dir, and 
+             copy the classes and config files into it -->
+        <mkdir dir="war-classes-tmp"/>
+        <mkdir dir="war-classes-tmp/META-INF"/>
+        <!--
+        <copy todir="war-classes-tmp/META-INF">
+            <fileset dir="${config.dir}">
+                <include name="persistence.xml"/>
+            </fileset>
+        </copy>
+        -->
+        <!-- Define a pattern for the set of classes from the tmp classes
+             dir that should be included in the archive -->
+        <patternset id="war.classes">
+            <include name="**"/>
+        </patternset>  
+    
+        <!-- Copy the required libraries to a temporary location, to flatten 
+             them into a single directory, and to make it easier to specify
+             them to the as-create-war target -->
+        <mkdir dir="war-libs-tmp"/>
+        <!-- You can put any project-specific jars into the lib dir
+             here, if needed. -->
+        <copy todir="war-libs-tmp" flatten="true">
+            <fileset dir="${seam.home.dir}">
+                <include name="jboss-seam-ui.jar"/>
+            </fileset>
+        </copy> 
+        
+        <!-- Define an all-inclusive patternset for the lib-tmp dir -->
+        <patternset id="war.libs">
+          <include name="**"/>
+        </patternset>
+    
+        <!-- Create a war using the application server as-create-war target,
+             and the patterns and file sets defined above -->
+        <antcall target="as-create-war">
+            <param name="as.war.name" value="${ant.project.name}"/>
+            <param name="as.war.dir" value="${basedir}"/>
+            <!-- If your web.xml is generic enough to work in any 
+                 app server, then you can use a single file and reference
+                 it here directly. -->
+            <param name="as.war.webxml.file"
+                   value="${config.dir}/web.xml"/>
+            <param name="as.war.files.basedir" value="war-files-tmp"/>
+            <param name="as.war.files.patternset" value="war.files"/>
+            <param name="as.war.lib.basedir" value="war-libs-tmp"/>
+            <param name="as.war.lib.patternset" value="war.libs"/>
+            <param name="as.war.classes.basedir" value="war-classes-tmp"/>
+            <param name="as.war.classes.patternset" value="war.classes"/>
+            <param name="as.war.webinf.basedir" value="war-webinf-tmp"/>
+            <param name="as.war.webinf.patternset" value="war.webinf"/>
+        </antcall>
+        
+        <!-- Clear out the tmp files directory -->
+        <delete dir="war-files-tmp"/>
+        <!-- Clear out the temp lib directory -->
+        <delete dir="war-libs-tmp"/>
+        <!-- Clear out the temp classes directory -->
+        <delete dir="war-classes-tmp"/>
+        <!-- Clear out the temp webinf directory -->
+        <delete dir="war-webinf-tmp"/>
+    </target>
+ 
+    <!-- Create any ejb modules required for this application -->   
+    <target name="create-ejbjars"
+            depends="compile">
+        <!-- Make a temp directory for the files to be put into the
+             META-INF of the ejb-jar, if any -->
+        <mkdir dir="ejbjar-metainf-tmp"/>
+        <!-- Move any special files for the META-INF dir into the tmp
+             dir created above... -->
+        <!--
+        <copy todir="ejbjar-metainf-tmp">
+            <fileset dir="${config.dir}">
+                <include name="ejb-jar.xml"/>
+                <include name="persistence.xml"/>
+            </fileset>
+        </copy>
+        -->
+        <!-- Pattern for files to be included in the metainf dir from
+             the temp dir. -->
+        <patternset id="ejbjar.metainf">
+            <include name="**"/>
+        </patternset>
+    
+        <!-- Make a temp directory for the contents of the classes dir, and 
+             copy the classes and config files into it -->
+        <mkdir dir="ejbjar-classes-tmp"/>
+        
+        <copy todir="ejbjar-classes-tmp">
+            <fileset dir="${java.classes.dir}">
+                <include name="**"/>
+            </fileset>
+            <fileset dir="${config.dir}">
+                <include name="seam.properties"/>
+            </fileset>
+        </copy>
+    
+        <!-- Define a pattern for the set of classes from the tmp classes
+             dir that should be included in the archive -->
+        <patternset id="war.classes">
+            <include name="**"/>
+        </patternset>  
+        
+        <antcall target="as-create-ejb3-jar">
+            <param name="as.ejb.name" value="${ant.project.name}"/>
+            <param name="as.ejb.classes.dir" value="ejbjar-classes-tmp"/>
+            <param name="as.ejb.jar.dir" value="${basedir}"/>
+            <param name="as.ejb.metainf.basedir" value="${config.dir}"/>
+        </antcall>
+        
+        <!-- Clean up -->
+        <delete dir="ejbjar-metainf-tmp"/>
+        <delete dir="ejbjar-classes-tmp"/>
+    </target>   
+</project>

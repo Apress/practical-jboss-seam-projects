@@ -1,0 +1,291 @@
+<project name="generic-as">
+    <!-- Set any server/environment-specific properties here -->
+    <property name="j2ee.dir" value="${user.home}/work/Software/j2sdkee1.3.1"/>
+    
+    <!-- 
+     Standard properties and assets.  These should be set to match the configuration
+     of the application server, so that they can be used within the build
+     script if needed. 
+    -->
+    
+    <!-- Property: as.http.port
+             Port number used by web/app server for regular HTTP traffic. -->
+    <property name="as.http.port" value="80"/>
+    
+    <!-- Property: as.http.hostname
+             Name/IP address of host of app server -->
+    <property name="as.http.hostname" value="localhost"/>
+    
+    <!-- Property: as.deploy.delay
+             Delay, in seconds, to expect for applications to deploy
+             on this application server. -->
+    <property name="as.deploy.delay" value="15"/>
+    
+    <!-- Path: as.j2ee.core.classpath
+           Defines set of libraries containing the core J2EE APIs provided
+           by this app server. -->
+    <path id="as.j2ee.core.classpath">
+        <pathelement location="${j2ee.dir}/lib/j2ee.jar"/>
+    </path>
+    
+    <!-- 
+     Targets defined for the application server and invoked in the build script.
+     Each target may require properties or other assets to be set by the build script
+     before invoking them, as noted in the comments before each target.
+    -->
+    
+    <!-- Target: as-create-war
+       Creates a web component archive.  If necessary, this target can post-process
+       the war file if the application server requires it.  The build script is expected
+       to initialize the following properties before calling this target:
+       
+       Required:
+          as.war.name:               A name to be used as the base of the war filename,
+                                     and in reporting progress while executing the target.
+          as.war.dir:                The directory in which to create the war file.
+          as.war.webxml.file:        The path to the file to be used as the web.xml deployment
+                                     descriptor for this war file.
+                            
+       Optional:
+          as.war.files.patternset:   The name of a patternset that specifies all files
+                                     to be included in the base directory of the archive.
+          as.war.files.basedir:      The base directory to be used with the war.patternset.
+          as.war.lib.patternset:     The name of a patternset that specifies all of the 
+                                     jars to be included in the war's WEB-INF/lib directory.
+          as.war.lib.basedir:        The base directory to be used with the war.lib.patternset.
+          as.war.classes.patternset: The name of a patternset that specifies all of the
+                                     files to be included in the war's WEB-INF/classes
+                                     directory.  This patternset can include Java classes,
+                                     Java properties files, etc. as needed by the web 
+                                     components.
+          as.war.classes.basedir:    The base directory to be used with the 
+                                     war.classes.patternset.
+          as.war.webinf.patternset:  The name of a patternset that specifies all of the files
+                                     to be included directly in the WEB-INF directory of
+                                     the war.
+          as.war.webinf.basedir:     The base directory to be used with the 
+                                     war.webinf.patternset.
+          as.war.metainf.patternset: The name of a patternset that specifies all files to be
+                                     included in the META-INF directory of the archive.
+          as.war.metainf.basedir:    The base directory to be used with the 
+                                     war.metainf.patternset. 
+                                  
+     Example:
+          The simplest usage of this target is:
+          
+          <!- - Define the patternsets to be used in the creation of web archives - ->
+          <patternset id="core-ui.files">
+              <exclude name="utils/**"/>
+          </patternset>
+          <patternset id="utils-ui.files">
+              <include name="utils/**"/>
+          </pattternset>
+          <target name="build-app-wars">
+              <!- - Create the war for the core UI, store in core-ui.war - ->
+              <antcall target="as-create-war">
+                  <param name="as.war.name" value="core-ui"/>
+                  <param name="as.war.dir" value="${basedir}"/>
+                  <param name="as.war.webxml.file" value="config/core-web.xml"/>
+                  <param name="as.war.basedir" value="web"/>
+                  <param name="as.war.patternset" value="core-ui.files"/>
+              </antcall>
+              <!- - Create the war for the utils, store in utils-ui.war - ->
+              <antcall target="as-create-war">
+                  <param name="as.war.name" value="utils-ui"/>
+                  <param name="as.war.dir" value="${basedir}"/>
+                  <param name="as.war.webxml.file" value="config/utils-web.xml"/>
+                  <param name="as.war.basedir" value="web"/>
+                  <param name="as.war.patternset" value="utils-ui.files"/>
+              </antcall>
+          </target> -->
+    <target name="as-create-war">
+        <!-- Fail if any required properties aren't set -->
+        <fail unless="as.war.name"
+              message="Required property 'as.war.name' not set"/>
+        <fail unless="as.war.webxml.file" 
+              message="Required property 'as.war.webxml.file' not set"/>
+              
+        <!-- Set any optional, unset properties to defaults -->
+        <patternset id="nullset">
+            <exclude name="**"/>
+        </patternset>
+        <condition property="as.war.files.patternset" value="nullset">
+            <not>
+                <isset property="as.war.files.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.files.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.files.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.lib.patternset" value="nullset">
+            <not>
+                <isset property="as.war.lib.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.lib.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.lib.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.classes.patternset" value="nullset">
+            <not>
+                <isset property="as.war.classes.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.classes.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.classes.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.webinf.patternset" value="nullset">
+            <not>
+                <isset property="as.war.webinf.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.webinf.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.webinf.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.metainf.patternset" value="nullset">
+            <not>
+                <isset property="as.war.metainf.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.metainf.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.metainf.basedir"/>
+            </not>
+        </condition>
+        
+        <!-- Invoke the war task to generate the war file -->
+        <war warfile="${as.war.dir}/${as.war.name}.war" 
+             webxml="${as.war.webxml.file}">
+            <!-- Include any files specified by the as.war.patternset into the root
+             or the web archive. -->
+            <fileset dir="${as.war.files.basedir}">
+                <patternset refid="${as.war.files.patternset}"/>
+            </fileset>
+            
+            <!-- Include any files specified by the as.war.lib.patternset into the 
+             WEB-INF/lib directory of the archive. -->
+            <lib dir="${as.war.lib.basedir}">
+                <patternset refid="${as.war.lib.patternset}"/>
+            </lib>
+            
+            <!-- Include any files specified by the as.war.classes.patternset into
+             the WEB-INF/classes directory of the archive. -->
+            <classes dir="${as.war.classes.basedir}">
+                <patternset refid="${as.war.lib.patternset}"/>
+            </classes>
+            
+            <!-- Include any files specified by the as.war.webinf.patternset into
+             the WEB-INF directory of the archive. -->
+            <webinf dir="${as.war.webinf.basedir}">
+                <patternset refid="${as.war.webinf.patternset}"/>
+            </webinf>
+            <!-- Include any files specified by the as.war.metainf.patternset into
+             the META-INF directory of the archive. -->
+            <metainf dir="${as.war.metainf.basedir}">
+                <patternset refid="${as.war.metainf.patternset}"/>
+            </metainf>
+        </war>
+    </target>
+    
+    <!-- Target: as-create-ejb-jar
+       Creates an EJB archive deployable to the target application server.  -->
+    <target name="as-create-ejb-jar" >
+        <echo message="Generating EJB archive '${as.ejb.name}'"/>
+        
+        <!-- Set any optional, unset fileset properties to defaults -->
+        <patternset id="nullset">
+            <exclude name="**"/>
+        </patternset>
+        
+        <!-- Check for the optional support file properties -->
+        <condition property="as.ejb.support.patternset" value="nullset">
+            <not>
+                <isset property="as.ejb.support.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.ejb.support.basedir" value="${basedir}">
+            <not>
+                <isset property="as.ejb.support.basedir"/>
+            </not>
+        </condition>
+        
+        <!-- Invoke the ejbjar task, looking for deployment descriptors
+         in the ${ejb.desc.dir} directory.  We are using "directory"-based
+         naming here, where the name of the directory containing the EJB 
+         deployment descriptor is used as the basis for the ejb-jar filename. -->
+        <ejbjar descriptordir="${as.ejb.desc.dir}"
+            srcdir="${as.ejb.classes.dir}" destdir="${as.ejb.jar.dir}"
+            naming="directory" genericjarsuffix="-generic.jar"
+            flatdestdir="true" dependency="super">
+            <!-- Only parse EJB descriptors in files ending with "ejb-jar.xml" -->
+            <include name="**/*ejb-jar.xml"/>
+            
+            <!-- Include any specified support files in the module. -->
+            <support dir="${as.ejb.support.basedir}">
+                <patternset refid="${as.ejb.support.patternset}"/>
+            </support>
+        </ejbjar>
+    </target>
+    
+    <!-- Target: as-create-ear
+         Creates an application archive, performing any pre- or post-processing required,
+         and including any server-specific configuration files required. -->
+    <target name="as-create-ear">
+        <echo message="Creating application ${as.ear.name}"/>
+        <ear destfile="${as.ear.dir}/${as.ear.name}.ear" 
+             appxml="${as.ear.appxml.file}">
+            <fileset dir="${as.ear.module.dir}">
+                <patternset refid="${as.ear.module.patternset}"/>
+            </fileset>
+        </ear>
+    </target>
+    
+    <!-- Target: as-verify-module
+         Verifies a component or application module, ensuring that it follows the 
+         J2EE specs and (optionally) the requirements of the application server in use. -->
+    <target name="as-verify-module">
+        <echo message="Verifying module ${as.module.file}"/>
+        <!-- Nothing to be done in the generic template - no verifier tool -->
+        <echo message="No verifier tool available in generic config."/>
+    </target>
+    
+    <!-- This target is used to start the application server -->
+    <target name="as-server-start"
+            description="Start the application server">
+        <echo message="No start process defined for generic server"/>
+    </target>
+
+    <!-- This target is used to stop the application server -->
+    <target name="as-server-stop"
+            description="Stop the application server">
+        <echo message="No stop process defined for generic server"/>
+    </target>    
+    
+    <!-- Target: as-deploy
+           Deploys the app war/ear specified by the as.deploy.file parameter,
+           using the deployment name given by the as.deploy.name parameter. 
+           Some application servers do not make use of the deployment name
+           concept, and can ignore this parameter.  Those that do should 
+           map the deployment name to the appropriate deployment option. -->
+    <target name="as-deploy">
+        <echo message="Deploying ${as.deploy.file} to server..."/>
+        <echo message="   Generic server configuration in use, nothing to do here."/>
+    </target>
+    
+    <!-- Target: as-clean
+          Instructs the application server module to clean up any internal
+          artefacts created by its targets. -->
+    <target name="as-clean">
+        <echo message="Cleaning up artefacts..."/>
+        <!-- The location of any artifacts we create (wars, ejb-jars, etc.) 
+             in the generic implementation are controlled by the project 
+             buildfile, so there's nothing we can do here. -->
+    </target>
+</project>

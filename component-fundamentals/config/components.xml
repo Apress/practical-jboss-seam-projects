@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components>
+    <!-- Install the Seam core internal component -->
+    <component name="org.jboss.seam.core.init">
+        <!-- JNDI name pattern for JBoss EJB 3.0.
+             Note that this needs to match the EJB
+             container being used. -->
+        <property name="jndiPattern">@project.name@/#{ejbName}/local</property>
+        <property name="myFacesLifecycleBug">true</property>        
+    </component>    
+    <component class="org.jboss.seam.core.Ejb" 
+               installed="false"/>        
+    <!-- Configure Gadget Catalog components -->
+    <!--
+    <component name="gadget"
+               class="org.jimfarley.gadgets.GadgetBean"/>
+    <component name="gadgetAdmin"
+               class="org.jimfarley.gadgets.GadgetAdminBean"/>
+    -->
+</components>

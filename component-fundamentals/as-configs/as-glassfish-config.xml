@@ -1,0 +1,445 @@
+<!-- Configuration file for Glassfish 1.0 application servers -->
+
+<!-- Set any server/environment-specific properties here -->
+<project name="glassfish">
+    <!-- The following are app-server-specific properties that should only
+         be used in the target definitions below.  They should *not* be 
+         referenced in your project build file, unless you don't care about 
+         portability to other app servers. -->
+         
+    <!-- The root of the Glassfish install directory -->
+    <property name="glassfish.home" value="/usr/local/glassfish-1_0" />
+    <!-- The domain to use.  Defaults to "domain1", which is created by default
+         by the Glassfish installer -->
+    <property name="glassfish.domain" value="domain1" />         
+    <!-- The main lib directory in the Glassfish install -->
+    <property name="glassfish.lib.dir" value="${glassfish.home}/lib"/>
+    <!-- Username used to administer server (start/stop/deploy) -->
+    <property name="glassfish.user" value="admin" />
+    <!-- Password for admin user -->
+    <property name="glassfish.password" value="adminadmin"/>          
+    <!-- HTTP port used by the Glassfish admin server. -->
+    <property name="glassfish.admin.http.port" value="4848"/>
+        
+    <!-- 
+     Standard properties and assets.  These should be set to match the configuration
+     of the application server, so that they can be used within the build
+     script if needed. You can use these in your project build file.
+    -->
+    
+    <!-- Property: as.http.port
+               Port number used by web/app server for regular HTTP traffic. -->
+    <property name="as.http.port" value="8080"/>
+    
+    <!-- Property: as.http.hostname
+               Name/IP address of host of app server -->
+    <property name="as.http.hostname" value="localhost"/>
+    
+    <!-- Delay, in seconds, to expect for applications to deploy
+        on this application server. -->
+    <!-- With Glassfish, we use the sun-appserv-deploy task directly in the as-deploy
+         target.  The task does not complete until the deployment is
+         finished, so we set the delay here to zero. -->
+    <property name="as.deploy.delay" value="0"/>
+    
+    <!-- **********************************************************************
+         The remainder of the config file should NOT need to be changed, assuming
+         you are using a standard glassfish setup. 
+         ********************************************************************** -->
+         
+    <!-- Path: as.j2ee.core.classpath
+           Defines set of libraries containing the core J2EE APIs provided
+           by this app server. -->
+    <!-- For Glassfish, we include the main glassfish.jar -->
+    <path id="as.j2ee.core.classpath">
+        <pathelement location="${glassfish.lib.dir}/javaee.jar"/>
+    </path>
+    
+    <!-- Import some glassfish Ant tasks from the distribution -->
+    <taskdef name="sun-appserv-deploy"
+             classname="org.apache.tools.ant.taskdefs.optional.sun.appserv.DeployTask">
+        <classpath refid="as.j2ee.core.classpath"/>
+        <classpath location="${glassfish.lib.dir}/sun-appserv-ant.jar"/>
+    </taskdef>
+    <taskdef name="sun-appserv-admin"
+             classname="org.apache.tools.ant.taskdefs.optional.sun.appserv.AdminTask">
+        <classpath refid="as.j2ee.core.classpath"/>
+        <classpath location="${glassfish.lib.dir}/sun-appserv-ant.jar"/>
+    </taskdef>
+    
+    <!-- 
+     Targets defined for the application server and invoked in the build script.
+     Each target may require properties or other assets to be set by the build script
+     before invoking them, as noted in the comments before each target.
+    -->
+    
+    <!-- Target: as-create-war
+       Creates a web component archive.  If necessary, this target can post-process
+       the war file if the application server requires it.  The build script is expected
+       to initialize the following properties before calling this target:
+       
+       Required:
+          as.war.name:               A name to be used as the base of the war filename,
+                                     and in reporting progress while executing the target.
+          as.war.dir:                The directory in which to create the war file.
+          as.war.webxml.file:        The path to the file to be used as the web.xml deployment
+                                     descriptor for this war file.
+                            
+       Optional:
+          as.war.files.patternset:   The name of a patternset that specifies all files
+                                     to be included in the base directory of the archive.
+          as.war.files.basedir:      The base directory to be used with the war.patternset.
+          as.war.lib.patternset:     The name of a patternset that specifies all of the 
+                                     jars to be included in the war's WEB-INF/lib directory.
+          as.war.lib.basedir:        The base directory to be used with the war.lib.patternset.
+          as.war.classes.patternset: The name of a patternset that specifies all of the
+                                     files to be included in the war's WEB-INF/classes
+                                     directory.  This patternset can include Java classes,
+                                     Java properties files, etc. as needed by the web 
+                                     components.
+          as.war.classes.basedir:    The base directory to be used with the 
+                                     war.classes.patternset.
+          as.war.webinf.patternset:  The name of a patternset that specifies all of the files
+                                     to be included directly in the WEB-INF directory of
+                                     the war.
+          as.war.webinf.basedir:     The base directory to be used with the 
+                                     war.webinf.patternset.
+          as.war.metainf.patternset: The name of a patternset that specifies all files to be
+                                     included in the META-INF directory of the archive.
+          as.war.metainf.basedir:    The base directory to be used with the 
+                                     war.metainf.patternset. 
+                                  
+     Example:
+          The simplest usage of this target is:
+          
+          <!- - Define the patternsets to be used in the creation of web archives - ->
+          <patternset id="core-ui.files">
+              <exclude name="utils/**"/>
+          </patternset>
+          <patternset id="utils-ui.files">
+              <include name="utils/**"/>
+          </pattternset>
+          <target name="build-app-wars">
+              <!- - Create the war for the core UI, store in core-ui.war - ->
+              <antcall target="as-create-war">
+                  <param name="as.war.name" value="core-ui"/>
+                  <param name="as.war.dir" value="${basedir}"/>
+                  <param name="as.war.webxml.file" value="config/core-web.xml"/>
+                  <param name="as.war.basedir" value="web"/>
+                  <param name="as.war.patternset" value="core-ui.files"/>
+              </antcall>
+              <!- - Create the war for the utils, store in utils-ui.war - ->
+              <antcall target="as-create-war">
+                  <param name="as.war.name" value="utils-ui"/>
+                  <param name="as.war.dir" value="${basedir}"/>
+                  <param name="as.war.webxml.file" value="config/utils-web.xml"/>
+                  <param name="as.war.basedir" value="web"/>
+                  <param name="as.war.patternset" value="utils-ui.files"/>
+              </antcall>
+          </target> -->
+    <target name="as-create-war">
+        <!-- Fail if any required properties aren't set -->
+        <fail unless="as.war.name" 
+              message="Required property 'as.war.name' not set"/>
+        <fail unless="as.war.webxml.file" 
+              message="Required property 'as.war.webxml.file' not set"/>
+              
+        <!-- WebLogic accepts a weblogic.xml file to configure
+             server deployment details like JNDI names, etc.  We
+             look in the same directory as the specified web.xml 
+             file for a weblogic.xml file, and if present, we place it
+             in the WEB-INF directory below. -->
+        <dirname property="glassfish.dd.dir" file="${as.war.webxml.file}"/>
+        <property name="glassfish.dd.file" value="sun-web.xml"/>
+        
+        <!-- Set any optional, unset properties to defaults -->
+        <patternset id="nullset">
+            <exclude name="**"/>
+        </patternset>
+        <condition property="as.war.files.patternset" value="nullset">
+            <not>
+                <isset property="as.war.files.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.files.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.files.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.lib.patternset" value="nullset">
+            <not>
+                <isset property="as.war.lib.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.lib.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.lib.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.classes.patternset" value="nullset">
+            <not>
+                <isset property="as.war.classes.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.classes.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.classes.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.webinf.patternset" value="nullset">
+            <not>
+                <isset property="as.war.webinf.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.webinf.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.webinf.basedir"/>
+            </not>
+        </condition>
+        <condition property="as.war.metainf.patternset" value="nullset">
+            <not>
+                <isset property="as.war.metainf.patternset"/>
+            </not>
+        </condition>
+        <condition property="as.war.metainf.basedir" value="${basedir}">
+            <not>
+                <isset property="as.war.metainf.basedir"/>
+            </not>
+        </condition>
+        
+        <!-- Invoke the war task to generate the war file -->
+        <war warfile="${as.war.dir}/${as.war.name}.war" webxml="${as.war.webxml.file}">
+            <!-- Include any files specified by the as.war.patternset into the root
+             or the web archive. -->
+            <fileset dir="${as.war.files.basedir}">
+                <patternset refid="${as.war.files.patternset}"/>
+            </fileset>
+            
+            <!-- Include any files specified by the as.war.lib.patternset into the 
+             WEB-INF/lib directory of the archive. -->
+            <lib dir="${as.war.lib.basedir}">
+                <patternset refid="${as.war.lib.patternset}"/>
+            </lib>
+            
+            <!-- Include any files specified by the as.war.classes.patternset into
+             the WEB-INF/classes directory of the archive. -->
+            <classes dir="${as.war.classes.basedir}">
+                <patternset refid="${as.war.lib.patternset}"/>
+            </classes>
+            
+            <!-- Include any files specified by the as.war.webinf.patternset into
+             the WEB-INF directory of the archive. -->
+            <webinf dir="${as.war.webinf.basedir}">
+                <patternset refid="${as.war.webinf.patternset}"/>
+            </webinf>
+            <!-- Also include the glassfish deployment descriptor -->
+            <webinf dir="${glassfish.dd.dir}">
+                <patternset includes="${glassfish.dd.file}"/>
+            </webinf>
+            
+            <!-- Include any files specified by the as.war.metainf.patternset into
+             the META-INF directory of the archive. -->
+            <metainf dir="${as.war.metainf.basedir}">
+                <patternset refid="${as.war.metainf.patternset}"/>
+            </metainf>
+        </war>
+    </target>
+    
+    <!-- Target: as-create-ejb-jar
+         Creates an EJB3 archive deployable to the target application server.  -->
+    <target name="as-create-ejb3-jar" >
+        <echo message="Generating EJB3 archive '${as.ejb.name}'"/>
+        <!-- Set any optional, unset fileset properties to defaults -->
+        <patternset id="nullset">
+            <exclude name=""/>
+        </patternset>
+        <!-- Check for the optional META-INF file properties -->
+        <condition property="as.ejb.metainf.patternset" value="nullset">
+            <not>
+                <isset property="as.ejb.metainf.patternset"/>
+            </not>
+        </condition>
+        <!-- Invoke the jar task, using the filesets/zipfilesets references
+            provided in the antcall to populate the required areas of the
+            ejb-jar. -->
+        <jar destfile="${as.ejb.jar.dir}/${as.ejb.name}.jar">
+            <!-- Put the classes into the root of the ejb-jar -->
+            <fileset dir="${as.ejb.classes.dir}">
+                <include name="**"/>
+            </fileset>
+            <!-- Pull the metadata information into the META-INF dir.
+                 this dir is expected to contain the ejb-jar.xml file and
+                 the persistence.xml files, if needed. -->
+            <zipfileset prefix="META-INF"
+                        dir="${as.ejb.metainf.basedir}">
+                <patternset>
+                    <include name="persistence.xml"/>
+                    <include name="ejb-jar.xml"/>
+                    <include name="orm.xml"/>
+                    <patternset refid="${as.ejb.metainf.patternset}"/>
+                </patternset>
+            </zipfileset>
+        </jar>
+    </target>
+    
+    <!-- Target: as-create-ear
+         Creates an application archive, performing any pre- or post-processing
+         required, and including any server-specific configuration files 
+         required. -->
+    <target name="as-create-ear">
+        <echo message="Creating application ${as.ear.name}"/>
+        
+        <!-- Assume that the glassfish application deployment file 
+             (glassfish-application.xml) is located in the same directory as
+             the J2EE standard app deployment descriptor -->
+        <dirname property="glassfish.dd.dir" file="${as.ear.appxml.file}"/>
+        <property name="glassfish.dd.file" value="sun-application.xml"/>
+        
+        <!-- Build the ear, including the specified J2EE deployment 
+             descriptor, the archive files specified, and the glassfish
+             deployment descriptor, if present -->
+        <ear destfile="${as.ear.dir}/${as.ear.name}.ear" appxml="${as.ear.appxml.file}">
+            <fileset dir="${as.ear.module.dir}">
+                <patternset refid="${as.ear.module.patternset}"/>
+            </fileset>
+            <metainf dir="${glassfish.dd.dir}">
+                <patternset includes="${glassfish.dd.file}"/>
+            </metainf>
+        </ear>
+    </target>
+    
+    <!-- Target: as-verify-module
+         Verifies a component or application module, ensuring that it follows the 
+         J2EE specs and (optionally) the requirements of the application server in use. -->
+    <target name="as-verify-module">
+        <echo message="Verifying module ${as.module.file}"/>
+        
+        <antcall target="exec-helper">
+            <param name="unix.cmd" value="${glassfish.home}/bin/verifier"/>
+            <param name="unix.args" value="-d ${basedir} ${as.module.file}"/>
+            <param name="win.cmd" value="${glassfish.home}/bin/verifier.bat"/>
+            <param name="win.args" value="-d ${basedir} ${as.module.file}"/>
+        </antcall>
+    </target>
+
+    <target name="as-server-start"
+            description="Start the Glassfish server">
+        <echo message="Starting Glassfish server ${glassfish.domain} running on ${as.http.hostname}:${as.http.port}"/>
+        
+        <antcall target="exec-helper">
+            <param name="unix.cmd" value="${glassfish.home}/bin/asadmin"/>
+            <param name="unix.args" value="start-domain ${glassfish.domain}"/>
+            <param name="win.cmd" value="${glassfish.home}/bin/asadmin.bat"/>
+            <param name="win.args" value="start-domain ${glassfish.domain}"/>
+        </antcall>
+    </target>
+
+    <target name="as-server-start-debug"
+            description="Start the Glassfish server">
+        <echo message="Starting Glassfish server ${glassfish.domain} running on ${as.http.hostname}:${as.http.port}"/>
+            
+        <antcall target="exec-helper">
+            <param name="unix.cmd" value="${glassfish.home}/bin/asadmin"/>
+            <param name="unix.args" value="start-domain --debug ${glassfish.domain}"/>
+            <param name="win.cmd" value="${glassfish.home}/bin/asadmin.bat"/>
+            <param name="win.args" value="start-domain --debug ${glassfish.domain}"/>
+        </antcall>
+    </target>
+
+    <target name="as-server-stop"
+            description="Stop the Glassfish server">
+        <echo message="Stopping Glassfish server ${glassfish.domain} running on ${as.http.hostname}:${as.http.port}"/>
+        
+        <antcall target="exec-helper">
+            <param name="unix.cmd" value="${glassfish.home}/bin/asadmin"/>
+            <param name="unix.args" value="stop-domain ${glassfish.domain}"/>
+            <param name="win.cmd" value="${glassfish.home}/bin/asadmin.bat"/>
+            <param name="win.args" value="stop-domain ${glassfish.domain}"/>
+        </antcall>
+    </target>
+    
+    <target name="as-database-start"
+            description="Start the Glassfish internal database">
+        <antcall target="exec-helper">
+            <param name="unix.cmd" value="${glassfish.home}/bin/asadmin"/>
+            <param name="unix.args" value="start-database"/>
+            <param name="win.cmd" value="${glassfish.home}/bin/asadmin.bat"/>
+            <param name="win.args" value="start-database"/>
+        </antcall>
+    </target>
+    
+    <target name="as-database-stop"
+            description="Stop the Glassfish internal database">
+        <antcall target="exec-helper">
+            <param name="unix.cmd" value="${glassfish.home}/bin/asadmin"/>
+            <param name="unix.args" value="stop-database"/>
+            <param name="win.cmd" value="${glassfish.home}/bin/asadmin.bat"/>
+            <param name="win.args" value="stop-database"/>
+        </antcall>
+    </target>
+    
+    <!-- Target: as-deploy
+           Deploys the app war/ear specified by the as.deploy.file property to the
+           application server named by the as.deploy.server property. -->
+    <target name="as-deploy">
+        <echo message="Deploying ${as.deploy.file} to glassfish server ${as.http.hostname}..."/>
+        <!-- Create a temporary password file -->
+        <echo file="sun-appserv-pwf.txt"
+              message="AS_ADMIN_PASSWORD=${glassfish.password}"/>
+        <!-- Use the sun-appserv-deploy task to deploy the app. -->
+        <sun-appserv-deploy file="${as.deploy.file}"
+                            name="${as.deploy.name}"
+                            force="true"
+                            precompilejsp="false"
+                            verify="false"
+                            upload="true"
+                            user="${glassfish.user}"
+                            passwordfile="sun-appserv-pwf.txt"
+                            host="${as.http.hostname}"
+                            port="${glassfish.admin.http.port}"
+                            asinstalldir="${glassfish.home}" />                            
+        <delete file="sun-appserv-pwf.txt"/>
+    </target>
+    
+    <!-- Target: as-clean
+          Instructs the application server module to clean up any internal
+          artefacts created by its targets. -->
+    <target name="as-clean">
+        <delete dir="as.ejb.jar.tmp"/>
+    </target> 
+    
+    <target name="exec-helper"
+            description="Helper target that determines the OS and runs the appropriate command.">
+        <condition property="windows-os-detected">
+            <os family="windows"/>
+        </condition>
+        
+        <antcall target="unix-exec-helper">
+            <param name="exec.command" value="${unix.cmd}"/>
+            <param name="exec.argument" value="${unix.args}"/>
+        </antcall>
+                
+        <antcall target="win-exec-helper">
+            <param name="exec.command" value="${win.cmd}"/>
+            <param name="exec.argument" value="${win.args}"/>
+        </antcall>
+    </target>
+    
+    <target name="unix-exec-helper"
+            unless="windows-os-detected">
+        <echo message="Executing command ${exec.command} in Unix environment."/>
+        <exec executable="${exec.command}"
+              failonerror="false">
+            <arg line="${exec.argument}"/>
+        </exec>
+    </target>
+    
+    <target name="win-exec-helper"
+            if="windows-os-detected">
+        <echo message="Executing command ${exec.command} in Windows environment."/>
+        <exec executable="${exec.command}"
+              failonerror="false">
+            <arg line="${exec.argument}"/>
+        </exec>
+    </target>
+</project>

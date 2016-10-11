@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:s="http://jboss.com/products/seam/taglib"
+      xmlns:h="http://java.sun.com/jsf/html">
+
+<head>
+    <title>Gadget Catalog: #{title}</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css"/>
+    <div id="head">
+        <ui:insert name="head"/>
+    </div>
+</head>
+
+<body onload='onPageLoad();'>
+    <script type="text/javascript" src="../seam/resource/remoting/resource/remote.js"></script>
+    
+    <!-- Add the Yahoo UI libraries needed for the auto-complete functions -->
+    <script src="../scripts/yui/yahoo/yahoo.js"></script>
+    <script src="../scripts/yui/dom/dom.js"></script>
+    <script src="../scripts/yui/event/event-debug.js"></script>
+    <script src="../scripts/yui/connection/connection.js"></script>
+    <script src="../scripts/yui/animation/animation.js"></script>
+    <script src="../scripts/yui/autocomplete/autocomplete-debug.js"></script>
+    <script src="../scripts/yui/logger/logger.js"></script>
+    
+    <script type="text/javascript" src="../gadgetSearch.js"></script>
+    
+    <div id="bodyScripts">
+        <ui:insert name="bodyScripts"/>
+    </div>
+    <table border="0" width="100%" class="headerTable">
+        <tr>
+            <td class="headerCell" colspan="2">
+                Gadget Catalog Admin: #{title}          
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <h:form>
+                    <s:link view="/admin/adminHome.seam" propagation="none">
+                        <h:outputText value="Home"/>
+                    </s:link>
+                </h:form>
+            </td>
+            <td align="right">
+                <h:outputLink value="login.seam" 
+                              rendered="#{not identity.loggedIn}">Log in</h:outputLink>
+                <s:link action="#{identity.logout}" value="Log out" 
+                        rendered="#{identity.loggedIn}"/>
+            </td>
+        </tr>
+    </table>
+
+    <div id="messages">
+        <h:messages layout="table"
+                    infoClass="infoMessage" 
+                    errorClass="errorMessage"/>
+    </div>
+    <div id="main">
+        <ui:insert name="main"/>
+    </div>
+</body>
+</html>
+

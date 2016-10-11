@@ -1,0 +1,5 @@
+<jboss-app>
+      <loader-repository> 
+      jimfarley.org:loader=PracticalSeam-Pageflow
+      </loader-repository> 
+</jboss-app> 

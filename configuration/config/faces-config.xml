@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE faces-config 
+    PUBLIC "-//Sun Microsystems, Inc.//DTD JavaServer Faces Config 1.0//EN"
+    "http://java.sun.com/dtd/web-facesconfig_1_0.dtd">
+    
+<faces-config>
+    <!-- Seam needs to be plugged into the JSF lifecycle by 
+         installing its phase listener -->
+    <lifecycle>
+        <phase-listener>org.jboss.seam.jsf.SeamPhaseListener</phase-listener>
+    </lifecycle>
+    
+    <navigation-rule>
+        <navigation-case>
+            <from-outcome>success</from-outcome>
+            <to-view-id>/listGadgets.seam</to-view-id>
+        </navigation-case>
+        <navigation-case>
+            <from-action>addGadget</from-action>
+            <to-view-id>/addGadget.seam</to-view-id>
+        </navigation-case>
+    </navigation-rule>
+</faces-config>

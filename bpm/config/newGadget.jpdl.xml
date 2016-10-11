@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Define a page flow for the "new gadget" wizard,
+     linked off of the administrative home page. -->
+<pageflow-definition name="new-gadget">
+    <start-state name="entry">
+        <transition name="start" to="core-data"/>
+    </start-state>
+    <page name="core-data" view-id="/wizard/start.jsp">
+        <redirect/>
+        <transition name="next" to="types">
+            <action name="interim-save" 
+                    expression="#{gadgetAdmin.interimSaveGadget}"/>
+        </transition>
+        <transition name="cancel" to="end">
+            <action name="cancel" expression="#{gadgetAdmin.cancelGadget}"/>
+        </transition>
+    </page>  
+    <!--
+    <start-page name="core-data" view-id="/wizard/start.jsp">
+        <redirect/>
+        <description>New gadget: #{gadget.name}</description>
+        <transition name="next" to="features">
+            <action name="interim-save" 
+                expression="#{gadgetAdmin.interimSaveGadget}"/>
+        </transition>
+        <transition name="cancel" to="end">
+            <action name="cancel" expression="#{gadgetAdmin.cancelGadget}"/>
+        </transition>
+    </start-page>
+    -->
+    <page name="types" view-id="/wizard/types.jsp">
+        <redirect/>
+        <transition name="next" to="check-types">
+            <action name="interim-save" 
+                expression="#{gadgetAdmin.interimSaveGadget}"/>
+        </transition>
+        <transition name="prev" to="core-data"/>
+        <transition name="new" to="new-type"/>
+    </page>
+    <page name="new-type" view-id="/wizard/newType.jsp">
+        <redirect/>
+        <transition name="save" to="types">
+            <action name="save-type" 
+                expression="#{gadgetAdmin.saveGadgetType}"/>
+        </transition>
+        <transition name="cancel" to="types"/>
+    </page>
+    <decision name="check-types" expression="#{gadgetAdmin.checkTypes}">
+        <transition name="no-type" to="confirm"/>
+        <transition name="typed" to="features"/>
+    </decision>
+    <!--
+    <decision name="check-types" expression="#{empty gadget.types}">
+        <transition name="true" to="confirm"/>
+        <transition name="false" to="features"/>
+    </decision>
+    -->
+    <page name="features" view-id="/wizard/features.jsp">
+        <redirect/>
+        <transition name="next" to="confirm">
+            <action expression="#{gadgetAdmin.interimSaveGadget}"/>
+        </transition>
+        <transition name="prev" to="types"/>
+        <transition name="new" to="new-feature"/>
+    </page>
+    <page name="new-feature" view-id="/wizard/newFeature.jsp">
+        <redirect/>
+        <transition name="save" to="features">
+            <action name="save-feature" 
+                    expression="#{gadgetAdmin.saveGadgetFeature}"/>
+        </transition>
+        <transition name="cancel" to="features"/>
+    </page>
+    <page name="confirm" view-id="/wizard/confirm.jsp">
+        <redirect/>
+        <transition name="save" to="end">
+            <action name="save" expression="#{gadgetAdmin.saveGadget}"/>
+        </transition>
+        <transition name="cancel" to="end">
+            <action name="cancel" expression="#{gadgetAdmin.cancelGadget}"/>
+        </transition>
+    </page>
+    <page name="end" view-id="/index.jsp">
+        <redirect/>
+        <end-conversation/>
+    </page>
+</pageflow-definition>

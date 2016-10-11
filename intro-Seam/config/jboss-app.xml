@@ -1,0 +1,5 @@
+<jboss-app>
+      <loader-repository> 
+      jimfarley.org:loader=PracticalSeam-Basic
+      </loader-repository> 
+</jboss-app> 

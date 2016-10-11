@@ -1,0 +1,5 @@
+<jboss-app>
+      <loader-repository> 
+      jimfarley.org:loader=@project.name@
+      </loader-repository> 
+</jboss-app> 

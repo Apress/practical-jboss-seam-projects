@@ -1,0 +1,9 @@
+<pages>
+    <page view-id="/editGadget.jsp">Editing gadget: #{gadget.name}</page>
+    <page view-id="/listGadgets.jsp">All gadgets matching "#{gadgetAdmin.searchField}"</page>
+    <!--
+    <page view-id="/wizard/start.jsp">
+        <begin-conversation pageflow="new-gadget"/>
+    </page>
+    -->
+</pages>
